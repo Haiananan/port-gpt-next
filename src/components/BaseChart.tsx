@@ -52,6 +52,7 @@ export interface BaseChartProps {
   unit?: string;
   name?: string;
   icon?: React.ElementType;
+  predictionDays?: number;
 }
 
 // 计算多项式回归拟合
@@ -211,13 +212,16 @@ function calculateTrendLine(
   const points = data.map((d) => ({
     x: new Date(d.date).getTime(),
     y: d[field] || 0,
+    date: d.date,
   }));
 
   // 标准化 x 值以避免数值过大
-  const minX = Math.min(...points.map((p) => p.x));
+  const minX = points[0].x;
+  const maxX = points[points.length - 1].x;
   const normalizedPoints = points.map((p) => ({
-    x: (p.x - minX) / (24 * 60 * 60 * 1000), // 转换为天数
+    x: (p.x - minX) / (60 * 60 * 1000), // 转换为小时数
     y: p.y,
+    date: p.date,
   }));
 
   // 使用最小二乘法计算趋势线
@@ -241,13 +245,14 @@ function calculateTrendLine(
   // 生成趋势线数据，包括预测部分
   const trendData = [...data];
   const lastDate = new Date(data[data.length - 1].date);
-  const lastX = (new Date(lastDate).getTime() - minX) / (24 * 60 * 60 * 1000);
+  const lastX = (maxX - minX) / (60 * 60 * 1000); // 转换为小时数
 
-  // 添加预测点
-  for (let i = 1; i <= predictionDays; i++) {
+  // 添加预测点（每小时一个点）
+  const totalPredictionHours = predictionDays * 24;
+  for (let i = 1; i <= totalPredictionHours; i++) {
     const nextDate = new Date(lastDate);
-    nextDate.setDate(lastDate.getDate() + i);
-    const dateStr = nextDate.toISOString().split("T")[0];
+    nextDate.setHours(nextDate.getHours() + i);
+    const dateStr = nextDate.toISOString().split(".")[0].replace("T", " ");
     const x = lastX + i;
     const predictedValue = slope * x + intercept;
 
@@ -260,7 +265,7 @@ function calculateTrendLine(
 
   // 为所有点添加趋势线值
   return trendData.map((d) => {
-    const x = (new Date(d.date).getTime() - minX) / (24 * 60 * 60 * 1000);
+    const x = (new Date(d.date).getTime() - minX) / (60 * 60 * 1000);
     return {
       ...d,
       [`${field}Trend`]: slope * x + intercept,
@@ -277,6 +282,7 @@ export function BaseChart({
   unit = "",
   name = "",
   icon,
+  predictionDays = 7,
 }: BaseChartProps) {
   if (typeof window === "undefined") {
     return null;
@@ -388,8 +394,33 @@ export function BaseChart({
   // 计算趋势线数据
   const trendData = useMemo(() => {
     if (!showTrend) return fittedData;
-    return calculateTrendLine(fittedData, dataKey);
-  }, [fittedData, dataKey, showTrend]);
+    const trendLineData = calculateTrendLine(data, dataKey, predictionDays);
+
+    // 合并拟合数据和趋势数据
+    const mergedData = fittedData.map((point) => {
+      const trendPoint = trendLineData.find((p) => p.date === point.date);
+      return {
+        ...point,
+        [`${dataKey}Trend`]: trendPoint?.[`${dataKey}Trend`],
+      };
+    });
+
+    // 只添加预测部分的数据点
+    const predictionData = trendLineData.filter((p) => p.isPrediction);
+    return [...mergedData, ...predictionData];
+  }, [data, dataKey, showTrend, fittedData, predictionDays]);
+
+  // 计算 X 轴范围
+  const xAxisDomain = useMemo(() => {
+    if (!showTrend || !data.length) return zoomDomain.x;
+
+    const startDate = data[0].date;
+    const lastDate = data[data.length - 1].date;
+    const endDate = new Date(lastDate);
+    endDate.setDate(endDate.getDate() + predictionDays);
+
+    return zoomDomain.x || [startDate, endDate.toISOString().split("T")[0]];
+  }, [data, showTrend, zoomDomain.x, predictionDays]);
 
   // 导出图表为图片
   const handleExportChart = useCallback(() => {
@@ -714,7 +745,7 @@ export function BaseChart({
               fontSize={12}
               tickLine={false}
               axisLine={false}
-              domain={zoomDomain.x}
+              domain={xAxisDomain}
               allowDataOverflow
             />
             <YAxis
