@@ -41,3 +41,25 @@ export const fetchTemperatureData = async (
   }
   return response.json();
 };
+
+// 获取风向和风速数据
+export async function fetchWindData(
+  station: string,
+  startDate: string,
+  endDate: string,
+  fields: string[] = ["date", "windDirection", "windSpeed"]
+): Promise<CoastalStationData[]> {
+  const params = new URLSearchParams({
+    station,
+    startDate,
+    endDate,
+    fields: fields.join(","),
+  });
+
+  const response = await fetch(`/api/chartData?${params.toString()}`);
+  if (!response.ok) {
+    throw new Error("获取风向风速数据失败");
+  }
+
+  return response.json();
+}
