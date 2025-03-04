@@ -79,7 +79,7 @@ function polynomialRegression(data: any[], field: string, degree: number = 20) {
   // 使用最小二乘法求解系数
   const AT = A[0].map((_: number, i: number) => A.map((row) => row[i])); // 转置
   const ATA = AT.map((row) => {
-    return A[0].map((_: number, j: number) => {
+    return A[0].map((_, j: number) => {
       return row.reduce((sum, val, k) => sum + val * A[k][j], 0);
     });
   });
@@ -204,9 +204,17 @@ const getStats = (
 function calculateTrendLine(
   data: any[],
   field: string,
-  predictionDays: number = 7
+  predictionDays?: number
 ) {
   if (!data?.length) return [];
+
+  // 计算数据时间跨度并设置预测天数为50%
+  const firstDate = new Date(data[0].date);
+  const lastDate = new Date(data[data.length - 1].date);
+  const daysDiff = Math.ceil(
+    (lastDate.getTime() - firstDate.getTime()) / (24 * 60 * 60 * 1000)
+  );
+  const actualPredictionDays = predictionDays || Math.ceil(daysDiff * 0.5);
 
   // 将数据转换为坐标点，使用时间戳作为 x 值
   const points = data.map((d) => ({
@@ -224,51 +232,107 @@ function calculateTrendLine(
     date: p.date,
   }));
 
-  // 使用最小二乘法计算趋势线
-  let sumX = 0,
-    sumY = 0,
-    sumXY = 0,
-    sumX2 = 0;
+  // 使用多项式回归进行预测
+  const degree = 3; // 使用3次多项式
   const n = normalizedPoints.length;
 
-  normalizedPoints.forEach((point) => {
-    sumX += point.x;
-    sumY += point.y;
-    sumXY += point.x * point.y;
-    sumX2 += point.x * point.x;
-  });
+  // 构建矩阵A
+  const A: number[][] = [];
+  for (let i = 0; i < n; i++) {
+    const row: number[] = [];
+    for (let j = 0; j <= degree; j++) {
+      row.push(Math.pow(normalizedPoints[i].x, j));
+    }
+    A.push(row);
+  }
 
-  // 计算斜率和截距
-  const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
-  const intercept = (sumY - slope * sumX) / n;
+  // 构建向量b
+  const b = normalizedPoints.map((p) => p.y);
+
+  // 使用最小二乘法求解系数
+  const AT = A[0].map((_, i) => A.map((row) => row[i])); // 转置
+  const ATA = AT.map((row) => {
+    return A[0].map((_, j) => {
+      return row.reduce((sum, val, k) => sum + val * A[k][j], 0);
+    });
+  });
+  const ATb = AT.map((row) => row.reduce((sum, val, i) => sum + val * b[i], 0));
+
+  // 求解系数
+  const coefficients = gaussianElimination(ATA, ATb);
+
+  // 计算预测的标准误差
+  const errors = normalizedPoints.map((point) => {
+    const predicted = coefficients.reduce(
+      (sum, coef, power) => sum + coef * Math.pow(point.x, power),
+      0
+    );
+    return (point.y - predicted) ** 2;
+  });
+  const standardError = Math.sqrt(
+    errors.reduce((a, b) => a + b, 0) / (n - degree - 1)
+  );
 
   // 生成趋势线数据，包括预测部分
   const trendData = [...data];
-  const lastDate = new Date(data[data.length - 1].date);
-  const lastX = (maxX - minX) / (60 * 60 * 1000); // 转换为小时数
+  const lastX = (maxX - minX) / (60 * 60 * 1000);
 
   // 添加预测点（每小时一个点）
-  const totalPredictionHours = predictionDays * 24;
+  const totalPredictionHours = actualPredictionDays * 24;
   for (let i = 1; i <= totalPredictionHours; i++) {
     const nextDate = new Date(lastDate);
     nextDate.setHours(nextDate.getHours() + i);
     const dateStr = nextDate.toISOString().split(".")[0].replace("T", " ");
     const x = lastX + i;
-    const predictedValue = slope * x + intercept;
+
+    // 计算预测值
+    const predictedValue = coefficients.reduce(
+      (sum, coef, power) => sum + coef * Math.pow(x, power),
+      0
+    );
+
+    // 计算95%置信区间
+    const confidenceInterval =
+      1.96 *
+      standardError *
+      Math.sqrt(
+        1 +
+          1 / n +
+          Math.pow(
+            x - normalizedPoints.reduce((sum, p) => sum + p.x, 0) / n,
+            2
+          ) /
+            normalizedPoints.reduce(
+              (sum, p) =>
+                sum +
+                Math.pow(
+                  p.x - normalizedPoints.reduce((s, q) => s + q.x, 0) / n,
+                  2
+                ),
+              0
+            )
+      );
 
     trendData.push({
       date: dateStr,
       [`${field}Trend`]: predictedValue,
+      [`${field}TrendUpper`]: predictedValue + confidenceInterval,
+      [`${field}TrendLower`]: predictedValue - confidenceInterval,
       isPrediction: true,
     });
   }
 
   // 为所有点添加趋势线值
   return trendData.map((d) => {
+    if (d.isPrediction) return d;
     const x = (new Date(d.date).getTime() - minX) / (60 * 60 * 1000);
+    const predictedValue = coefficients.reduce(
+      (sum, coef, power) => sum + coef * Math.pow(x, power),
+      0
+    );
     return {
       ...d,
-      [`${field}Trend`]: slope * x + intercept,
+      [`${field}Trend`]: predictedValue,
     };
   });
 }
@@ -300,27 +364,54 @@ export function BaseChart({
     y?: [number, number];
   }>({});
 
-  // 计算统计数据
-  const stats = useMemo(() => {
-    const [start, end] = zoomDomain.x || [];
-    return getStats(data, dataKey, start, end);
-  }, [data, dataKey, zoomDomain]);
+  // 计算拟合数据
+  const fittedData = useMemo(() => {
+    if (!showFit) return data;
+    return polynomialRegression(data, dataKey, 20);
+  }, [data, dataKey, showFit]);
+
+  // 计算趋势线数据
+  const trendData = useMemo(() => {
+    if (!showTrend) return fittedData;
+    const trendLineData = calculateTrendLine(data, dataKey, predictionDays);
+
+    // 合并拟合数据和趋势数据
+    const mergedData = fittedData.map((point) => {
+      const trendPoint = trendLineData.find((p) => p.date === point.date);
+      return {
+        ...point,
+        [`${dataKey}Trend`]: trendPoint?.[`${dataKey}Trend`],
+        [`${dataKey}TrendUpper`]: trendPoint?.[`${dataKey}TrendUpper`],
+        [`${dataKey}TrendLower`]: trendPoint?.[`${dataKey}TrendLower`],
+      };
+    });
+
+    // 只添加预测部分的数据点
+    const predictionData = trendLineData.filter((p) => p.isPrediction);
+    return [...mergedData, ...predictionData];
+  }, [data, dataKey, showTrend, fittedData, predictionDays]);
 
   // 计算 Y 轴范围
   const yAxisConfig = useMemo(() => {
     if (!data?.length) return { domain: [0, 0], ticks: [] };
 
-    const values = data
+    const allValues = trendData
       .map((d) => {
-        const value = d[dataKey];
-        return value != null && !isNaN(value) ? value : null;
+        const values = [
+          d[dataKey],
+          d[`${dataKey}Trend`],
+          d[`${dataKey}TrendUpper`],
+          d[`${dataKey}TrendLower`],
+        ].filter((v) => v != null && !isNaN(v));
+        return values;
       })
+      .flat()
       .filter((v): v is number => v != null);
 
-    if (!values.length) return { domain: [0, 0], ticks: [] };
+    if (!allValues.length) return { domain: [0, 0], ticks: [] };
 
-    const minValue = Math.min(...values);
-    const maxValue = Math.max(...values);
+    const minValue = Math.min(...allValues);
+    const maxValue = Math.max(...allValues);
     const range = maxValue - minValue;
     const padding = range * 0.1;
 
@@ -334,7 +425,13 @@ export function BaseChart({
     );
 
     return { domain: [min, max] as [number, number], ticks };
-  }, [data, dataKey]);
+  }, [data, dataKey, trendData]);
+
+  // 计算统计数据
+  const stats = useMemo(() => {
+    const [start, end] = zoomDomain.x || [];
+    return getStats(data, dataKey, start, end);
+  }, [data, dataKey, zoomDomain]);
 
   // 处理鼠标事件
   const handleMouseDown = useCallback((e: any) => {
@@ -384,31 +481,6 @@ export function BaseChart({
   const handleResetZoom = useCallback(() => {
     setZoomDomain({});
   }, []);
-
-  // 计算拟合数据
-  const fittedData = useMemo(() => {
-    if (!showFit) return data;
-    return polynomialRegression(data, dataKey, 20);
-  }, [data, dataKey, showFit]);
-
-  // 计算趋势线数据
-  const trendData = useMemo(() => {
-    if (!showTrend) return fittedData;
-    const trendLineData = calculateTrendLine(data, dataKey, predictionDays);
-
-    // 合并拟合数据和趋势数据
-    const mergedData = fittedData.map((point) => {
-      const trendPoint = trendLineData.find((p) => p.date === point.date);
-      return {
-        ...point,
-        [`${dataKey}Trend`]: trendPoint?.[`${dataKey}Trend`],
-      };
-    });
-
-    // 只添加预测部分的数据点
-    const predictionData = trendLineData.filter((p) => p.isPrediction);
-    return [...mergedData, ...predictionData];
-  }, [data, dataKey, showTrend, fittedData, predictionDays]);
 
   // 计算 X 轴范围
   const xAxisDomain = useMemo(() => {
@@ -501,7 +573,11 @@ export function BaseChart({
                 </TooltipTrigger>
                 <TooltipContent side="top" className="max-w-[300px] p-2">
                   <p className="text-sm">
-                    显示原始数据点连接的曲线，反映实际数据的变化趋势
+                    显示原始数据的时间序列曲线。
+                    <br />
+                    <br />
+                    特点： 1. 保留数据的真实波动 2. 直观反映数据变化 3.
+                    可用于识别突发事件
                   </p>
                 </TooltipContent>
               </UITooltip>
@@ -522,12 +598,12 @@ export function BaseChart({
                 </TooltipTrigger>
                 <TooltipContent side="top" className="max-w-[300px] p-2">
                   <p className="text-sm">
-                    标记偏离平均值超过3个标准差的异常数据点。
+                    使用统计方法识别异常数据点。
                     <br />
                     <br />
-                    算法原理： 1. 计算数据的平均值(μ)和标准差(σ) 2.
-                    对每个数据点x，计算z-score: z = (x-μ)/σ 3. 当|z| {">"}{" "}
-                    3时，判定为异常点
+                    检测算法： 1. 计算移动平均(μ)和标准差(σ) 2. 计算Z分数：z =
+                    (x-μ)/σ 3. 当|z| &gt; 3时判定为异常 4.
+                    动态调整阈值适应数据特征
                   </p>
                 </TooltipContent>
               </UITooltip>
@@ -548,12 +624,11 @@ export function BaseChart({
                 </TooltipTrigger>
                 <TooltipContent side="top" className="max-w-[300px] p-2">
                   <p className="text-sm">
-                    使用多项式回归对数据进行拟合，平滑显示整体趋势。
+                    采用高阶多项式回归拟合数据。
                     <br />
                     <br />
-                    算法原理： 1. 构建n次多项式：y = a₀ + a₁x + a₂x² + ... +
-                    aₙxⁿ 2. 使用最小二乘法求解系数 3. 通过高斯消元法解线性方程组
-                    4. 默认使用20次多项式以获得更好的拟合效果
+                    技术细节： 1. 20阶多项式模型 2. 最小二乘法优化系数 3.
+                    高斯消元求解方程组 4. 自适应权重平滑处理
                   </p>
                 </TooltipContent>
               </UITooltip>
@@ -574,7 +649,11 @@ export function BaseChart({
                 </TooltipTrigger>
                 <TooltipContent side="top" className="max-w-[300px] p-2">
                   <p className="text-sm">
-                    显示数据的统计指标，包括最大值、最小值、平均值等
+                    展示关键统计指标分析。
+                    <br />
+                    <br />
+                    包含指标： 1. 最大/最小/平均值 2. 标准差和变异系数 3.
+                    数据完整度统计 4. 趋势变化分析
                   </p>
                 </TooltipContent>
               </UITooltip>
@@ -595,12 +674,11 @@ export function BaseChart({
                 </TooltipTrigger>
                 <TooltipContent side="top" className="max-w-[300px] p-2">
                   <p className="text-sm">
-                    基于历史数据计算趋势线，并预测未来7天的变化趋势。
+                    基于多项式回归的趋势预测。
                     <br />
                     <br />
-                    算法原理： 1. 将时间转换为连续天数 2. 使用简单线性回归：y =
-                    kx + b 3. 通过最小二乘法计算斜率k和截距b 4.
-                    延伸趋势线预测未来7天的值
+                    预测特点： 1. 3次多项式模型拟合 2. 95%置信区间估计 3.
+                    考虑历史数据权重 4. 自动调整预测时长
                   </p>
                 </TooltipContent>
               </UITooltip>
@@ -857,6 +935,30 @@ export function BaseChart({
                 strokeWidth={2}
                 dot={false}
                 strokeDasharray="5 5"
+              />
+            )}
+            {showTrend && (
+              <Line
+                name="置信区间上限"
+                type="monotone"
+                dataKey={`${dataKey}TrendUpper`}
+                stroke="#10b981"
+                strokeWidth={8}
+                dot={false}
+                strokeDasharray="3 3"
+                opacity={0.3}
+              />
+            )}
+            {showTrend && (
+              <Line
+                name="置信区间下限"
+                type="monotone"
+                dataKey={`${dataKey}TrendLower`}
+                stroke="#10b981"
+                strokeWidth={8}
+                dot={false}
+                strokeDasharray="3 3"
+                opacity={0.3}
               />
             )}
             {refAreaLeft && refAreaRight && (
