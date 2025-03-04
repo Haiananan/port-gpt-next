@@ -1,32 +1,21 @@
 "use client";
 
 import * as React from "react";
-import {
-  Line,
-  LineChart,
-  CartesianGrid,
-  XAxis,
-  YAxis,
-  ResponsiveContainer,
-  Legend,
-} from "recharts";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { format } from "date-fns";
 import { zhCN } from "date-fns/locale";
 import { useQuery } from "@tanstack/react-query";
 import { fetchWaveData } from "@/services/coastalApi";
-import {
-  ChartConfig,
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart";
+import { BaseChart, calculateMovingAverage } from "@/components/BaseChart";
+import { CoastalStationData } from "@/types/coastal";
+
+interface ProcessedWaveData {
+  date: string;
+  windWavePeriod: number;
+  originalDate: Date;
+  windWavePeriodAvg6h?: number;
+  windWavePeriodAvg12h?: number;
+}
 
 interface CoastalWavePeriodChartProps {
   station: string;
@@ -34,34 +23,69 @@ interface CoastalWavePeriodChartProps {
   endDate: Date;
 }
 
-const chartConfig = {
-  wavePeriod: {
-    label: "浪周期",
-    theme: {
-      light: "hsl(var(--primary))",
-      dark: "hsl(var(--primary))",
-    },
-  },
-} satisfies ChartConfig;
-
 export function CoastalWavePeriodChart({
   station,
   startDate,
   endDate,
 }: CoastalWavePeriodChartProps) {
+  const [showAvg6h, setShowAvg6h] = React.useState(false);
+  const [showAvg12h, setShowAvg12h] = React.useState(false);
+
   const { data, isLoading } = useQuery({
-    queryKey: ["wave", station, startDate.toISOString(), endDate.toISOString()],
+    queryKey: [
+      "wavePeriod",
+      station,
+      startDate.toISOString(),
+      endDate.toISOString(),
+    ],
     queryFn: () =>
       fetchWaveData(station, startDate.toISOString(), endDate.toISOString()),
   });
 
-  const waveData = React.useMemo(() => {
-    if (!data) return null;
-    return data.map((d) => ({
-      date: new Date(d.date).toISOString(),
-      wavePeriod: d.windWavePeriod,
-    }));
+  const wavePeriodData = React.useMemo(() => {
+    if (!data) return [];
+
+    const baseData = data
+      .map((d: CoastalStationData) => ({
+        date: format(new Date(d.date), "MM-dd HH:mm", { locale: zhCN }),
+        windWavePeriod: d.windWavePeriod ?? 0,
+        originalDate: new Date(d.date),
+      }))
+      .sort((a, b) => a.originalDate.getTime() - b.originalDate.getTime());
+
+    // 计算移动平均
+    const withAvg6h = calculateMovingAverage(baseData, 6, "windWavePeriod");
+    const withAvg12h = calculateMovingAverage(baseData, 12, "windWavePeriod");
+
+    // 合并所有平均值
+    return baseData.map((item, index) => ({
+      ...item,
+      windWavePeriodAvg6h: withAvg6h[index].windWavePeriodAvg6h,
+      windWavePeriodAvg12h: withAvg12h[index].windWavePeriodAvg12h,
+    })) as ProcessedWaveData[];
   }, [data]);
+
+  // 计算浪周期范围
+  const wavePeriodRange = React.useMemo(() => {
+    if (!wavePeriodData.length) return { min: 0, max: 0 };
+    const values = wavePeriodData
+      .map((d) => d.windWavePeriod)
+      .filter((v): v is number => v != null && !isNaN(v));
+    const minValue = Math.min(...values);
+    const maxValue = Math.max(...values);
+    const range = maxValue - minValue;
+    const padding = range * 0.1; // 增加 10% 的空白区域
+
+    const min = Math.floor((minValue - padding) * 10) / 10;
+    const max = Math.ceil((maxValue + padding) * 10) / 10;
+
+    // 生成刻度值数组，间隔0.1
+    const ticks = Array.from(
+      { length: Math.round((max - min) * 10) + 1 },
+      (_, i) => Math.round((min + i * 0.1) * 10) / 10
+    );
+    return { min, max, ticks };
+  }, [wavePeriodData]);
 
   if (isLoading) {
     return (
@@ -78,70 +102,53 @@ export function CoastalWavePeriodChart({
     );
   }
 
-  if (!waveData?.length) {
+  if (!wavePeriodData?.length) {
     return null;
   }
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>浪周期变化</CardTitle>
-        <CardDescription>
-          {format(startDate, "MM-dd", { locale: zhCN })} 至{" "}
-          {format(endDate, "MM-dd", { locale: zhCN })}
-        </CardDescription>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <div>
+          <CardTitle>浪周期变化</CardTitle>
+        </div>
+        <div className="flex items-center gap-2">
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={showAvg6h}
+              onChange={(e) => setShowAvg6h(e.target.checked)}
+              className="h-4 w-4 rounded border-gray-300"
+            />
+            6小时平均
+          </label>
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={showAvg12h}
+              onChange={(e) => setShowAvg12h(e.target.checked)}
+              className="h-4 w-4 rounded border-gray-300"
+            />
+            12小时平均
+          </label>
+        </div>
       </CardHeader>
       <CardContent>
-        <div className="h-[300px]">
-          <ChartContainer config={chartConfig}>
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart
-                data={waveData}
-                margin={{ top: 5, right: 30, left: 0, bottom: 5 }}
-                className="[&_.recharts-cartesian-grid-horizontal_line]:stroke-border [&_.recharts-cartesian-grid-vertical_line]:stroke-border"
-              >
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  horizontal={true}
-                  vertical={false}
-                  className="stroke-muted/50"
-                />
-                <XAxis
-                  dataKey="date"
-                  stroke="hsl(var(--muted-foreground))"
-                  fontSize={12}
-                  tickLine={false}
-                  axisLine={false}
-                  tickFormatter={(value) =>
-                    format(new Date(value), "HH:mm", { locale: zhCN })
-                  }
-                />
-                <YAxis
-                  stroke="hsl(var(--muted-foreground))"
-                  fontSize={12}
-                  tickLine={false}
-                  axisLine={false}
-                  tickFormatter={(value) => `${value}s`}
-                />
-                <ChartTooltip content={<ChartTooltipContent />} />
-                <Legend />
-                <Line
-                  name="浪周期"
-                  type="monotone"
-                  dataKey="wavePeriod"
-                  className="stroke-primary fill-primary/20"
-                  strokeWidth={2}
-                  dot={false}
-                  activeDot={{
-                    r: 4,
-                    className: "fill-primary stroke-background stroke-2",
-                  }}
-                  isAnimationActive={false}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </ChartContainer>
-        </div>
+        <BaseChart
+          data={wavePeriodData}
+          dataKey="windWavePeriod"
+          color="hsl(280, 100%, 50%)"
+          showAvg6h={showAvg6h}
+          showAvg12h={showAvg12h}
+          onAvg6hChange={setShowAvg6h}
+          onAvg12hChange={setShowAvg12h}
+          avg6hColor="hsl(280, 100%, 65%)"
+          avg12hColor="hsl(280, 100%, 80%)"
+          unit="s"
+          name="浪周期"
+          yAxisDomain={[wavePeriodRange.min, wavePeriodRange.max]}
+          yAxisTicks={wavePeriodRange.ticks}
+        />
       </CardContent>
     </Card>
   );
