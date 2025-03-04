@@ -13,6 +13,7 @@ import { CoastalPressureChart } from "@/components/CoastalPressureChart";
 import { CoastalWavePeriodChart } from "@/components/CoastalWavePeriodChart";
 import { CoastalWaveHeightChart } from "@/components/CoastalWaveHeightChart";
 import { CoastalStats } from "@/components/CoastalStats";
+import { Header } from "@/components/ui/header";
 
 export default function DataQueryComponent() {
   const [station, setStation] = useState<string>("XCS");
@@ -62,82 +63,85 @@ export default function DataQueryComponent() {
   }, [station, startDate, endDate]);
 
   return (
-    <div className="container mx-auto p-4 space-y-6">
-      <CoastalQueryForm
-        station={station}
-        startDate={startDate}
-        endDate={endDate}
-        onStationChange={setStation}
-        onDateRangeChange={handleDateRangeChange}
-        onReset={handleReset}
-      />
+    <main className="min-h-screen">
+      <Header />
+      <div className=" p-4 space-y-6 mx-auto">
+        <CoastalQueryForm
+          station={station}
+          startDate={startDate}
+          endDate={endDate}
+          onStationChange={setStation}
+          onDateRangeChange={handleDateRangeChange}
+          onReset={handleReset}
+        />
 
-      {!station || !startDate || !endDate ? (
-        <Alert>
-          <AlertDescription>请选择站点和日期范围以查看数据</AlertDescription>
-        </Alert>
-      ) : (
-        <>
-          <CoastalStats
-            station={station}
-            startDate={startDate}
-            endDate={endDate}
-          />
-          <div className="grid grid-cols-2 gap-4">
-            <CoastalTemperatureChart
+        {!station || !startDate || !endDate ? (
+          <Alert>
+            <AlertDescription>请选择站点和日期范围以查看数据</AlertDescription>
+          </Alert>
+        ) : (
+          <>
+            <CoastalStats
               station={station}
               startDate={startDate}
               endDate={endDate}
             />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <CoastalTemperatureChart
+                station={station}
+                startDate={startDate}
+                endDate={endDate}
+              />
 
-            <CoastalPressureChart
-              station={station}
-              startDate={startDate}
-              endDate={endDate}
-            />
+              <CoastalPressureChart
+                station={station}
+                startDate={startDate}
+                endDate={endDate}
+              />
 
-            <CoastalWaveHeightChart
-              station={station}
-              startDate={startDate}
-              endDate={endDate}
-            />
+              <CoastalWaveHeightChart
+                station={station}
+                startDate={startDate}
+                endDate={endDate}
+              />
 
-            <CoastalWavePeriodChart
-              station={station}
-              startDate={startDate}
-              endDate={endDate}
-            />
+              <CoastalWavePeriodChart
+                station={station}
+                startDate={startDate}
+                endDate={endDate}
+              />
 
-            <CoastalWindChart
-              station={station}
-              startDate={startDate}
-              endDate={endDate}
-            />
-          </div>
-
-          {isLoading && (
-            <div className="space-y-3">
-              <Skeleton className="h-[400px] w-full" />
+              <CoastalWindChart
+                station={station}
+                startDate={startDate}
+                endDate={endDate}
+              />
             </div>
-          )}
 
-          {error && (
-            <Alert variant="destructive">
-              <AlertDescription>错误: {error.message}</AlertDescription>
-            </Alert>
-          )}
+            {isLoading && (
+              <div className="space-y-3">
+                <Skeleton className="h-[400px] w-full" />
+              </div>
+            )}
 
-          {data && (
-            <CoastalDataTable
-              data={data.data}
-              total={data.pagination.total}
-              page={data.pagination.page}
-              totalPages={data.pagination.totalPages}
-              onPageChange={setPage}
-            />
-          )}
-        </>
-      )}
-    </div>
+            {error && (
+              <Alert variant="destructive">
+                <AlertDescription>错误: {error.message}</AlertDescription>
+              </Alert>
+            )}
+
+            {data && (
+              <CoastalDataTable
+                data={data.data}
+                total={data.pagination.total}
+                page={data.pagination.page}
+                totalPages={data.pagination.totalPages}
+                onPageChange={setPage}
+              />
+            )}
+          </>
+        )}
+      </div>
+    </main>
   );
 }

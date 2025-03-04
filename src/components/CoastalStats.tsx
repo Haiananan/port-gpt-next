@@ -75,7 +75,7 @@ export function CoastalStats({
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         {statsConfig.map((config) => (
           <Card key={config.title} className="p-6">
             <Skeleton className="h-[120px] w-full" />
@@ -86,7 +86,7 @@ export function CoastalStats({
   }
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6">
       {statsConfig.map((config) => (
         <StatsCard
           key={config.title}
