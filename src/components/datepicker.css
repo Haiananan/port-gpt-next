@@ -3,6 +3,8 @@
   border: 1px solid var(--border);
   border-radius: 0.5rem;
   background-color: var(--background);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 .react-datepicker__header {
@@ -10,7 +12,8 @@
   border-bottom: 1px solid var(--border);
   border-top-left-radius: 0.5rem;
   border-top-right-radius: 0.5rem;
-  padding-top: 0.5rem;
+  padding-top: 0.8rem;
+  padding-bottom: 0.8rem;
 }
 
 .react-datepicker__month-container {
@@ -19,65 +22,141 @@
 
 .react-datepicker__day {
   color: var(--foreground);
+  border-radius: 0.3rem;
+  transition: all 0.2s ease;
+  margin: 0.2rem;
+  width: 2rem;
+  line-height: 2rem;
 }
 
 .react-datepicker__day:hover {
   background-color: var(--accent);
-  border-radius: 0.3rem;
+  color: var(--accent-foreground);
 }
 
-.react-datepicker__day--selected {
-  background-color: var(--primary);
-  color: white;
-  border-radius: 0.3rem;
-}
-
+.react-datepicker__day--selected,
 .react-datepicker__day--keyboard-selected {
   background-color: var(--primary);
-  color: white;
-  border-radius: 0.3rem;
+  color: var(--primary-foreground);
+  font-weight: 500;
 }
 
-.react-datepicker__day--in-range {
+.react-datepicker__day--selected:hover,
+.react-datepicker__day--keyboard-selected:hover {
   background-color: var(--primary);
-  color: white;
+  opacity: 0.9;
 }
 
+.react-datepicker__day--in-range,
 .react-datepicker__day--in-selecting-range {
   background-color: var(--primary);
-  color: white;
+  color: var(--primary-foreground);
+  opacity: 0.8;
 }
 
 .react-datepicker__input-container input {
   width: 100%;
   cursor: pointer;
+  background-color: var(--background);
+  color: var(--foreground);
+  border: 1px solid var(--border);
+  border-radius: 0.3rem;
+  padding: 0.5rem;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.react-datepicker__input-container input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(var(--primary-foreground), 0.1);
 }
 
 .react-datepicker__month-select,
 .react-datepicker__year-select {
   border: 1px solid var(--border);
   border-radius: 0.3rem;
-  padding: 0.2rem;
+  padding: 0.3rem 0.5rem;
   background-color: var(--background);
   color: var(--foreground);
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.react-datepicker__month-select:focus,
+.react-datepicker__year-select:focus {
+  border-color: var(--primary);
 }
 
 .react-datepicker__current-month {
   color: var(--foreground);
   font-weight: 500;
   font-size: 1rem;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.8rem;
 }
 
 .react-datepicker__day-name {
   color: var(--muted-foreground);
+  margin: 0.2rem;
+  width: 2rem;
+  line-height: 2rem;
 }
 
 .react-datepicker__navigation {
-  top: 0.5rem;
+  top: 0.8rem;
+  color: var(--foreground);
+  transition: opacity 0.2s ease;
+}
+
+.react-datepicker__navigation:hover {
+  opacity: 0.8;
 }
 
 .react-datepicker__day--disabled {
   color: var(--muted-foreground);
   opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.react-datepicker__day--today {
+  font-weight: 500;
+  border: 1px dashed var(--primary);
+}
+
+@media (prefers-color-scheme: dark) {
+  .react-datepicker {
+    border-color: rgba(var(--border), 0.2);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2),
+      0 2px 4px -1px rgba(0, 0, 0, 0.1);
+  }
+
+  .react-datepicker__header {
+    background-color: rgba(var(--background), 0.8);
+    border-bottom-color: rgba(var(--border), 0.2);
+  }
+
+  .react-datepicker__day:hover {
+    background-color: rgba(var(--accent), 0.2);
+  }
+
+  .react-datepicker__day--selected,
+  .react-datepicker__day--keyboard-selected {
+    background-color: var(--primary);
+    color: var(--primary-foreground);
+  }
+
+  .react-datepicker__day--in-range,
+  .react-datepicker__day--in-selecting-range {
+    background-color: rgba(var(--primary), 0.2);
+    color: var(--foreground);
+  }
+
+  .react-datepicker__input-container input {
+    background-color: transparent;
+  }
+
+  .react-datepicker__month-select,
+  .react-datepicker__year-select {
+    background-color: rgba(var(--background), 0.8);
+  }
 }
