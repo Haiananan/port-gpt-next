@@ -145,13 +145,13 @@ export function CoastalWindSpeedChart({
         <BaseChart
           data={windSpeedData}
           dataKey="windSpeed"
-          color="hsl(262.1 83.3% 57.8%)"
+          color="hsl(142.1 76.2% 36.3%)"
           showAvg6h={showAvg6h}
           showAvg12h={showAvg12h}
           onAvg6hChange={setShowAvg6h}
           onAvg12hChange={setShowAvg12h}
-          avg6hColor="hsl(262.1 83.3% 65%)"
-          avg12hColor="hsl(262.1 83.3% 80%)"
+          avg6hColor="hsl(142.1 76.2% 50%)"
+          avg12hColor="hsl(142.1 76.2% 65%)"
           unit="m/s"
           name="风速"
           yAxisDomain={[windSpeedRange.min, windSpeedRange.max]}

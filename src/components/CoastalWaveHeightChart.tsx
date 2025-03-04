@@ -143,13 +143,13 @@ export function CoastalWaveHeightChart({
         <BaseChart
           data={waveHeightData}
           dataKey="windWaveHeight"
-          color="hsl(201, 100%, 50%)"
+          color="hsl(35.3 91.2% 51.6%)"
           showAvg6h={showAvg6h}
           showAvg12h={showAvg12h}
           onAvg6hChange={setShowAvg6h}
           onAvg12hChange={setShowAvg12h}
-          avg6hColor="hsl(201, 100%, 65%)"
-          avg12hColor="hsl(201, 100%, 80%)"
+          avg6hColor="hsl(35.3 91.2% 65%)"
+          avg12hColor="hsl(35.3 91.2% 80%)"
           unit="m"
           name="浪高"
           yAxisDomain={[waveHeightRange.min, waveHeightRange.max]}
