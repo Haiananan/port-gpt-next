@@ -8,7 +8,7 @@ export function Header() {
           <Anchor className="h-6 w-6" />
           <span className="font-bold text-lg">港航灵眸</span>
           <span className="text-sm text-muted-foreground">
-            基于AI的港口船舶数据分析平台
+            港口船舶数据分析平台
           </span>
         </div>
         <div className=" ml-auto">

@@ -17,7 +17,7 @@ import { Header } from "@/components/ui/header";
 import { CoastalWindSpeedChart } from "@/components/CoastalWindSpeedChart";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ChartBar, Table2 } from "lucide-react";
-
+import { ScrollToTop } from "@/components/ui/scroll-to-top";
 export default function DataQueryComponent() {
   const [station, setStation] = useState<string>("XCS");
   const [startDate, setStartDate] = useState<Date | undefined>(
@@ -67,6 +67,7 @@ export default function DataQueryComponent() {
 
   return (
     <main className="min-h-screen">
+      <ScrollToTop />
       <Header />
       <div className="container mx-auto p-4 space-y-6">
         <CoastalQueryForm

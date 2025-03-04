@@ -1,36 +1,124 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 港航灵眸 - 智能港口气象数据可视化平台
 
-## Getting Started
+## 项目简介
 
-First, run the development server:
+港航灵眸是一个基于 Next.js 和 React 开发的现代化港口气象数据可视化平台。该平台提供了直观的数据展示界面，支持多种气象数据的可视化分析，包括风速、风向、气温、气压、波高等关键指标。
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## 主要功能
+
+- **多维度数据展示**
+
+  - 风速和风向玫瑰图
+  - 气温变化趋势图
+  - 气压分布图
+  - 波高统计图
+  - 波浪周期分析
+
+- **智能数据查询**
+
+  - 多站点支持
+  - 灵活的日期范围选择
+  - 随机示例数据生成
+  - 数据表格展示
+
+- **用户友好界面**
+  - 响应式设计
+  - 暗色模式支持
+  - 交互式图表
+  - 数据导出功能
+
+## 技术栈
+
+- **前端框架**
+
+  - Next.js 14
+  - React 18
+  - TypeScript
+  - TailwindCSS
+
+- **UI 组件**
+
+  - shadcn/ui
+  - Radix UI
+  - Lucide Icons
+
+- **数据可视化**
+  - ECharts
+  - React Query
+
+## 快速开始
+
+1. **环境要求**
+
+   ```bash
+   Node.js >= 18.0.0
+   npm >= 9.0.0
+   ```
+
+2. **安装依赖**
+
+   ```bash
+   npm install
+   ```
+
+3. **启动开发服务器**
+
+   ```bash
+   npm run dev
+   ```
+
+4. **构建生产版本**
+   ```bash
+   npm run build
+   npm start
+   ```
+
+## 项目结构
+
+```
+src/
+├── app/                # Next.js 应用路由
+├── components/         # React 组件
+│   ├── ui/            # 通用 UI 组件
+│   └── ...           # 业务组件
+├── config/            # 配置文件
+├── lib/              # 工具函数
+├── services/         # API 服务
+└── styles/           # 全局样式
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 特色功能说明
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 数据查询
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- 支持选择不同海岸站点
+- 灵活的日期范围选择（2022 年 1 月至 2023 年 7 月）
+- 随机示例功能，快速生成示例数据
+- 智能日期范围限制
 
-## Learn More
+### 数据可视化
 
-To learn more about Next.js, take a look at the following resources:
+- 风玫瑰图支持缩放和详细数据查看
+- 饼图展示风速和风向分布
+- 折线图展示温度和气压变化
+- 统计图表展示波高和周期数据
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### 界面优化
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- 支持浅色/深色主题切换
+- 响应式布局适配多种设备
+- 图表联动和交互优化
+- 数据加载状态提示
 
-## Deploy on Vercel
+## 贡献指南
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+欢迎提交 Issue 和 Pull Request 来帮助改进项目。在提交 PR 之前，请确保：
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. 代码符合项目的代码规范
+2. 新功能有适当的测试覆盖
+3. 文档已经更新
+4. commit message 清晰明了
+
+## 许可证
+
+MIT License
