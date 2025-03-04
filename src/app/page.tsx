@@ -7,7 +7,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { fetchCoastalData } from "@/services/coastalApi";
 import { CoastalQueryForm } from "@/components/CoastalQueryForm";
 import { CoastalDataTable } from "@/components/CoastalDataTable";
-import { CoastalTemperatureChart } from "@/components/CoastalTemperatureChart";
+import { CoastalAirTemperatureChart } from "@/components/CoastalAirTemperatureChart";
+import { CoastalSeaTemperatureChart } from "@/components/CoastalSeaTemperatureChart";
 import { CoastalWindChart } from "@/components/CoastalWindChart";
 import { CoastalPressureChart } from "@/components/CoastalPressureChart";
 import { CoastalWavePeriodChart } from "@/components/CoastalWavePeriodChart";
@@ -18,6 +19,7 @@ import { CoastalWindSpeedChart } from "@/components/CoastalWindSpeedChart";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ChartBar, Table2 } from "lucide-react";
 import { ScrollToTop } from "@/components/ui/scroll-to-top";
+
 export default function DataQueryComponent() {
   const [station, setStation] = useState<string>("XCS");
   const [startDate, setStartDate] = useState<Date | undefined>(
@@ -112,7 +114,12 @@ export default function DataQueryComponent() {
                   endDate={endDate}
                 />
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <CoastalTemperatureChart
+                  <CoastalAirTemperatureChart
+                    station={station}
+                    startDate={startDate}
+                    endDate={endDate}
+                  />
+                  <CoastalSeaTemperatureChart
                     station={station}
                     startDate={startDate}
                     endDate={endDate}
