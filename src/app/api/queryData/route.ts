@@ -1,7 +1,5 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import { prisma } from "@/lib/prisma";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -28,7 +26,7 @@ export async function GET(request: Request) {
       prisma.coastalStationData.findMany({
         where,
         orderBy: {
-          date: "desc",
+          date: "asc",
         },
         skip: (page - 1) * pageSize,
         take: pageSize,

@@ -7,6 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { fetchCoastalData } from "@/services/coastalApi";
 import { CoastalQueryForm } from "@/components/CoastalQueryForm";
 import { CoastalDataTable } from "@/components/CoastalDataTable";
+import { CoastalTemperatureChart } from "@/components/CoastalTemperatureChart";
 
 export default function DataQueryComponent() {
   const [station, setStation] = useState("");
@@ -16,7 +17,7 @@ export default function DataQueryComponent() {
 
   const { data, error, isLoading } = useQuery({
     queryKey: [
-      "data",
+      "tableData",
       station || null,
       startDate?.toISOString() || null,
       endDate?.toISOString() || null,
@@ -29,6 +30,7 @@ export default function DataQueryComponent() {
         endDate?.toISOString() || null,
         page
       ),
+    enabled: Boolean(startDate && endDate && station), // 只在有完整查询条件时才发起请求
   });
 
   // 重置所有条件
@@ -64,27 +66,40 @@ export default function DataQueryComponent() {
         onReset={handleReset}
       />
 
-      {isLoading && (
-        <div className="space-y-3">
-          <Skeleton className="h-[40px] w-full" />
-          <Skeleton className="h-[400px] w-full" />
-        </div>
-      )}
-
-      {error && (
-        <Alert variant="destructive">
-          <AlertDescription>错误: {error.message}</AlertDescription>
+      {!station || !startDate || !endDate ? (
+        <Alert>
+          <AlertDescription>请选择站点和日期范围以查看数据</AlertDescription>
         </Alert>
-      )}
+      ) : (
+        <>
+          <CoastalTemperatureChart
+            station={station}
+            startDate={startDate}
+            endDate={endDate}
+          />
 
-      {data && (
-        <CoastalDataTable
-          data={data.data}
-          total={data.pagination.total}
-          page={data.pagination.page}
-          totalPages={data.pagination.totalPages}
-          onPageChange={setPage}
-        />
+          {isLoading && (
+            <div className="space-y-3">
+              <Skeleton className="h-[400px] w-full" />
+            </div>
+          )}
+
+          {error && (
+            <Alert variant="destructive">
+              <AlertDescription>错误: {error.message}</AlertDescription>
+            </Alert>
+          )}
+
+          {data && (
+            <CoastalDataTable
+              data={data.data}
+              total={data.pagination.total}
+              page={data.pagination.page}
+              totalPages={data.pagination.totalPages}
+              onPageChange={setPage}
+            />
+          )}
+        </>
       )}
     </div>
   );
