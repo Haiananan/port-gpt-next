@@ -1,12 +1,13 @@
+"use client";
+
 import {
-  CartesianGrid,
-  ScatterChart,
-  Scatter,
+  PolarAngleAxis,
+  PolarGrid,
+  PolarRadiusAxis,
+  Radar,
+  RadarChart,
   ResponsiveContainer,
   Tooltip,
-  Legend,
-  XAxis,
-  YAxis,
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { format } from "date-fns";
@@ -22,6 +23,16 @@ interface CoastalWindChartProps {
   endDate: Date;
 }
 
+interface WindDirectionData {
+  direction: string;
+  微风: number;
+  轻风: number;
+  和风: number;
+  强风: number;
+  大风: number;
+  [key: string]: string | number; // 添加索引签名
+}
+
 // 将角度转换为方向文字
 const getWindDirection = (angle: number) => {
   const directions = ["北", "东北", "东", "东南", "南", "西南", "西", "西北"];
@@ -31,12 +42,21 @@ const getWindDirection = (angle: number) => {
 
 // 获取点的颜色，根据风速大小
 const getWindSpeedColor = (speed: number) => {
-  if (speed < 2) return "#22c55e"; // 微风
-  if (speed < 5) return "#3b82f6"; // 轻风
-  if (speed < 8) return "#f59e0b"; // 和风
-  if (speed < 11) return "#ef4444"; // 强风
-  return "#7c3aed"; // 大风
+  if (speed < 2) return "hsl(142.1 76.2% 36.3%)"; // 微风
+  if (speed < 5) return "hsl(221.2 83.2% 53.3%)"; // 轻风
+  if (speed < 8) return "hsl(35.3 91.2% 51.6%)"; // 和风
+  if (speed < 11) return "hsl(0 84.2% 60.2%)"; // 强风
+  return "hsl(262.1 83.3% 57.8%)"; // 大风
 };
+
+// 风速等级说明
+const WIND_LEVELS = [
+  { name: "微风", range: "<2m/s", color: "hsl(142.1 76.2% 36.3%)" },
+  { name: "轻风", range: "2-5m/s", color: "hsl(221.2 83.2% 53.3%)" },
+  { name: "和风", range: "5-8m/s", color: "hsl(35.3 91.2% 51.6%)" },
+  { name: "强风", range: "8-11m/s", color: "hsl(0 84.2% 60.2%)" },
+  { name: "大风", range: ">11m/s", color: "hsl(262.1 83.3% 57.8%)" },
+];
 
 export function CoastalWindChart({
   station,
@@ -53,30 +73,45 @@ export function CoastalWindChart({
       fetchWindData(station, startDate.toISOString(), endDate.toISOString()),
   });
 
-  // 处理数据，转换为图表所需格式
-  const chartData =
+  // 处理数据，按风向分组并计算平均风速
+  const processData = () => {
+    if (!windData) return [];
+
+    const directions = ["北", "东北", "东", "东南", "南", "西南", "西", "西北"];
+    const directionData: WindDirectionData[] = directions.map((dir) => ({
+      direction: dir,
+      微风: 0,
+      轻风: 0,
+      和风: 0,
+      强风: 0,
+      大风: 0,
+    }));
+
+    // 统计每个方向的风速分布
     windData
-      ?.filter((item) => item.windDirection !== null && item.windSpeed !== null)
-      .map((item) => {
-        // 将风向角度转换为弧度（0度指向北方，顺时针旋转）
-        const angleRad = ((90 - item.windDirection!) * Math.PI) / 180;
-        return {
-          date: format(new Date(item.date), "MM-dd HH:mm", { locale: zhCN }),
-          windDirection: item.windDirection!,
-          windSpeed: item.windSpeed!,
-          // 计算在笛卡尔坐标系中的位置
-          x: item.windSpeed! * Math.cos(angleRad),
-          y: item.windSpeed! * Math.sin(angleRad),
-          // 获取点的颜色
-          fill: getWindSpeedColor(item.windSpeed!),
-        };
-      }) || [];
+      .filter((item) => item.windDirection !== null && item.windSpeed !== null)
+      .forEach((item) => {
+        const dirIndex =
+          Math.round(((item.windDirection! + 360) % 360) / 45) % 8;
+        const speed = item.windSpeed!;
+
+        if (speed < 2) directionData[dirIndex]["微风"]++;
+        else if (speed < 5) directionData[dirIndex]["轻风"]++;
+        else if (speed < 8) directionData[dirIndex]["和风"]++;
+        else if (speed < 11) directionData[dirIndex]["强风"]++;
+        else directionData[dirIndex]["大风"]++;
+      });
+
+    return directionData;
+  };
+
+  const chartData = processData();
 
   if (isLoading) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>风向风速图</CardTitle>
+          <CardTitle>风向玫瑰图</CardTitle>
         </CardHeader>
         <CardContent>
           <Skeleton className="h-[400px] w-full" />
@@ -89,7 +124,7 @@ export function CoastalWindChart({
     return (
       <Card>
         <CardHeader>
-          <CardTitle>风向风速图</CardTitle>
+          <CardTitle>风向玫瑰图</CardTitle>
         </CardHeader>
         <CardContent className="h-[400px] flex items-center justify-center text-muted-foreground">
           加载失败
@@ -102,7 +137,7 @@ export function CoastalWindChart({
     return (
       <Card>
         <CardHeader>
-          <CardTitle>风向风速图</CardTitle>
+          <CardTitle>风向玫瑰图</CardTitle>
         </CardHeader>
         <CardContent className="h-[400px] flex items-center justify-center text-muted-foreground">
           暂无风向风速数据
@@ -111,77 +146,54 @@ export function CoastalWindChart({
     );
   }
 
-  // 计算最大风速，用于设置坐标轴范围
-  const maxWindSpeed = Math.max(...chartData.map((d) => d.windSpeed));
-  const axisRange = [-maxWindSpeed, maxWindSpeed];
-
   return (
     <Card>
       <CardHeader>
-        <CardTitle>风向风速图</CardTitle>
+        <CardTitle>风向玫瑰图</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="h-[400px]">
           <ResponsiveContainer width="100%" height="100%">
-            <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis
-                type="number"
-                dataKey="x"
-                domain={axisRange}
-                tickFormatter={(value) => `${Math.abs(value)}m/s`}
-                label={{ value: "东 ←   → 西", position: "bottom" }}
+            <RadarChart
+              cx="50%"
+              cy="50%"
+              outerRadius="80%"
+              data={chartData}
+              margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
+            >
+              <PolarGrid gridType="circle" />
+              <PolarAngleAxis
+                dataKey="direction"
+                tick={{ fill: "hsl(var(--foreground))" }}
               />
-              <YAxis
-                type="number"
-                dataKey="y"
-                domain={axisRange}
-                tickFormatter={(value) => `${Math.abs(value)}m/s`}
-                label={{ value: "南 ←   → 北", angle: -90, position: "left" }}
+              <PolarRadiusAxis
+                angle={90}
+                domain={[0, "auto"]}
+                tick={{ fill: "hsl(var(--foreground))" }}
               />
-              <Scatter data={chartData} shape="circle" fill="#8884d8">
-                {chartData.map((entry, index) => (
-                  <circle
-                    key={`dot-${index}`}
-                    cx={0}
-                    cy={0}
-                    r={3}
-                    fill={entry.fill}
-                  />
-                ))}
-              </Scatter>
               <Tooltip
                 content={({ active, payload }) => {
                   if (active && payload && payload.length) {
-                    const data = payload[0].payload;
                     return (
                       <div className="rounded-lg border bg-background p-2 shadow-sm">
                         <div className="grid gap-2">
-                          <div className="flex flex-col">
-                            <span className="text-[0.70rem] uppercase text-muted-foreground">
-                              时间
-                            </span>
-                            <span className="font-bold text-muted-foreground">
-                              {data.date}
-                            </span>
+                          <div className="font-bold">
+                            {payload[0].payload.direction}
                           </div>
-                          <div className="flex flex-col">
-                            <span className="text-[0.70rem] uppercase text-muted-foreground">
-                              风向
-                            </span>
-                            <span className="font-bold">
-                              {getWindDirection(data.windDirection)}
-                              {` (${data.windDirection}°)`}
-                            </span>
-                          </div>
-                          <div className="flex flex-col">
-                            <span className="text-[0.70rem] uppercase text-muted-foreground">
-                              风速
-                            </span>
-                            <span className="font-bold">
-                              {data.windSpeed} m/s
-                            </span>
-                          </div>
+                          {payload.map((entry: any) => (
+                            <div
+                              key={entry.name}
+                              className="flex items-center gap-2"
+                            >
+                              <div
+                                className="w-3 h-3 rounded-full"
+                                style={{ backgroundColor: entry.color }}
+                              />
+                              <span>
+                                {entry.name}: {entry.value}
+                              </span>
+                            </div>
+                          ))}
                         </div>
                       </div>
                     );
@@ -189,34 +201,32 @@ export function CoastalWindChart({
                   return null;
                 }}
               />
-              <Legend
-                content={() => (
-                  <div className="flex justify-center gap-4 mt-4">
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full bg-[#22c55e]" />
-                      <span className="text-sm">微风 (&lt;2m/s)</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full bg-[#3b82f6]" />
-                      <span className="text-sm">轻风 (2-5m/s)</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full bg-[#f59e0b]" />
-                      <span className="text-sm">和风 (5-8m/s)</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full bg-[#ef4444]" />
-                      <span className="text-sm">强风 (8-11m/s)</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full bg-[#7c3aed]" />
-                      <span className="text-sm">大风 (&gt;11m/s)</span>
-                    </div>
-                  </div>
-                )}
-              />
-            </ScatterChart>
+              {WIND_LEVELS.map((level) => (
+                <Radar
+                  key={level.name}
+                  name={level.name}
+                  dataKey={level.name}
+                  stroke={level.color}
+                  fill={level.color}
+                  fillOpacity={0.6}
+                  isAnimationActive={false}
+                />
+              ))}
+            </RadarChart>
           </ResponsiveContainer>
+          <div className="flex flex-wrap justify-center gap-4 mt-4">
+            {WIND_LEVELS.map((level) => (
+              <div key={level.name} className="flex items-center gap-2">
+                <div
+                  className="w-3 h-3 rounded-full"
+                  style={{ backgroundColor: level.color }}
+                />
+                <span className="text-sm">
+                  {level.name} ({level.range})
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
       </CardContent>
     </Card>

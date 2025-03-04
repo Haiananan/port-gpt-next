@@ -93,7 +93,19 @@ async function main() {
   }
 }
 
-main()
+async function fresh() {
+  const res = await prisma.coastalStationData.updateMany({
+    where: {
+      windWavePeriod: {
+        gte: 99,
+      },
+    },
+    data: { windWavePeriod: null },
+  });
+  console.log("已将大于 99 的数据更新为null", res.length);
+}
+
+fresh()
   .catch((e) => {
     console.error(e);
     process.exit(1);

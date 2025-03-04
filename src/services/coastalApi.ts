@@ -63,3 +63,41 @@ export async function fetchWindData(
 
   return response.json();
 }
+
+export async function fetchPressureData(
+  station: string,
+  startDate: string,
+  endDate: string
+): Promise<CoastalStationData[]> {
+  const params = new URLSearchParams({
+    station,
+    startDate,
+    endDate,
+    fields: "date,airPressure",
+  });
+
+  const response = await fetch(`/api/chartData?${params.toString()}`);
+  if (!response.ok) {
+    throw new Error("获取气压数据失败");
+  }
+  return response.json();
+}
+
+export async function fetchWaveData(
+  station: string,
+  startDate: string,
+  endDate: string
+): Promise<CoastalStationData[]> {
+  const params = new URLSearchParams({
+    station,
+    startDate,
+    endDate,
+    fields: "date,windWaveHeight,windWavePeriod,surgeHeight,surgePeriod",
+  });
+
+  const response = await fetch(`/api/chartData?${params.toString()}`);
+  if (!response.ok) {
+    throw new Error("获取风浪数据失败");
+  }
+  return response.json();
+}

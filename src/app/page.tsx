@@ -9,7 +9,10 @@ import { CoastalQueryForm } from "@/components/CoastalQueryForm";
 import { CoastalDataTable } from "@/components/CoastalDataTable";
 import { CoastalTemperatureChart } from "@/components/CoastalTemperatureChart";
 import { CoastalWindChart } from "@/components/CoastalWindChart";
+import { CoastalPressureChart } from "@/components/CoastalPressureChart";
 
+import { CoastalWavePeriodChart } from "@/components/CoastalWavePeriodChart";
+import { CoastalWaveHeightChart } from "@/components/CoastalWaveHeightChart";
 export default function DataQueryComponent() {
   const [station, setStation] = useState<string>("XCS");
   const [startDate, setStartDate] = useState<Date | undefined>(
@@ -77,13 +80,28 @@ export default function DataQueryComponent() {
         </Alert>
       ) : (
         <>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className="grid gap-4 md:grid-cols-2">
             <CoastalTemperatureChart
               station={station}
               startDate={startDate}
               endDate={endDate}
             />
             <CoastalWindChart
+              station={station}
+              startDate={startDate}
+              endDate={endDate}
+            />
+            <CoastalPressureChart
+              station={station}
+              startDate={startDate}
+              endDate={endDate}
+            />
+            <CoastalWaveHeightChart
+              station={station}
+              startDate={startDate}
+              endDate={endDate}
+            />
+            <CoastalWavePeriodChart
               station={station}
               startDate={startDate}
               endDate={endDate}
