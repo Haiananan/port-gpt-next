@@ -15,6 +15,16 @@ import {
 import { useState, useCallback, useMemo } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import React from "react";
+import { Button } from "@/components/ui/button";
+import { Download } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { toPng } from "html-to-image";
+import * as XLSX from "xlsx";
 
 export interface BaseChartProps {
   data: any[];
@@ -220,6 +230,58 @@ export function BaseChart({
     return polynomialRegression(data, dataKey, 20);
   }, [data, dataKey, showFit]);
 
+  // 导出图表为图片
+  const handleExportChart = useCallback(() => {
+    const chartElement = document.querySelector(
+      `#chart-${name}`
+    ) as HTMLElement;
+    if (!chartElement) return;
+
+    toPng(chartElement, { quality: 1 })
+      .then((dataUrl) => {
+        const link = document.createElement("a");
+        link.download = `${name}-图表.png`;
+        link.href = dataUrl;
+        link.click();
+      })
+      .catch((error) => {
+        console.error("导出图表失败:", error);
+      });
+  }, [name]);
+
+  // 导出数据为CSV/Excel
+  const handleExportData = useCallback(
+    (format: "csv" | "excel") => {
+      const headers = ["日期", name, "拟合值"];
+      const rows = fittedData.map((d) => [
+        d.date,
+        d[dataKey],
+        d[`${dataKey}Fit`],
+      ]);
+
+      if (format === "csv") {
+        const csvContent = [
+          headers.join(","),
+          ...rows.map((row) => row.join(",")),
+        ].join("\n");
+
+        const blob = new Blob([csvContent], {
+          type: "text/csv;charset=utf-8;",
+        });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = `${name}-数据.csv`;
+        link.click();
+      } else {
+        const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, name);
+        XLSX.writeFile(wb, `${name}-数据.xlsx`);
+      }
+    },
+    [fittedData, dataKey, name]
+  );
+
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between mb-4">
@@ -254,10 +316,29 @@ export function BaseChart({
               拟合曲线
             </label>
           </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm">
+                <Download className="h-4 w-4 mr-2" />
+                导出
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem onClick={handleExportChart}>
+                导出为图片 (PNG)
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleExportData("csv")}>
+                导出为 CSV
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleExportData("excel")}>
+                导出为 Excel
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
-      <div className="h-[300px]">
+      <div className="h-[300px]" id={`chart-${name}`}>
         <ResponsiveContainer width="100%" height="100%">
           <LineChart
             data={fittedData}
