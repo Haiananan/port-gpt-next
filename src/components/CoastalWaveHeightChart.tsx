@@ -2,31 +2,26 @@
 
 import * as React from "react";
 import {
-  Line,
-  LineChart,
-  CartesianGrid,
-  XAxis,
-  YAxis,
-  ResponsiveContainer,
-  Legend,
-} from "recharts";
-import { format } from "date-fns";
-import { zhCN } from "date-fns/locale";
-import { useQuery } from "@tanstack/react-query";
-import { fetchWaveData } from "@/services/coastalApi";
-import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
-import {
-  ChartConfig,
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart";
+import { format } from "date-fns";
+import { zhCN } from "date-fns/locale";
+import { useQuery } from "@tanstack/react-query";
+import { fetchWaveData } from "@/services/coastalApi";
+import { BaseChart, calculateMovingAverage } from "@/components/BaseChart";
+import { CoastalStationData } from "@/types/coastal";
+
+interface ProcessedWaveData {
+  date: string;
+  windWaveHeight: number;
+  originalDate: Date;
+  windWaveHeightAvg6h?: number;
+  windWaveHeightAvg12h?: number;
+}
 
 interface CoastalWaveHeightChartProps {
   station: string;
@@ -34,34 +29,69 @@ interface CoastalWaveHeightChartProps {
   endDate: Date;
 }
 
-const chartConfig = {
-  waveHeight: {
-    label: "浪高",
-    theme: {
-      light: "hsl(var(--primary))",
-      dark: "hsl(var(--primary))",
-    },
-  },
-} satisfies ChartConfig;
-
 export function CoastalWaveHeightChart({
   station,
   startDate,
   endDate,
 }: CoastalWaveHeightChartProps) {
+  const [showAvg6h, setShowAvg6h] = React.useState(false);
+  const [showAvg12h, setShowAvg12h] = React.useState(false);
+
   const { data, isLoading } = useQuery({
-    queryKey: ["wave", station, startDate.toISOString(), endDate.toISOString()],
+    queryKey: [
+      "waveHeight",
+      station,
+      startDate.toISOString(),
+      endDate.toISOString(),
+    ],
     queryFn: () =>
       fetchWaveData(station, startDate.toISOString(), endDate.toISOString()),
   });
 
-  const waveData = React.useMemo(() => {
-    if (!data) return null;
-    return data.map((d) => ({
-      date: new Date(d.date).toISOString(),
-      waveHeight: d.windWaveHeight,
-    }));
+  const waveHeightData = React.useMemo(() => {
+    if (!data) return [];
+
+    const baseData = data
+      .map((d: CoastalStationData) => ({
+        date: format(new Date(d.date), "MM-dd HH:mm", { locale: zhCN }),
+        windWaveHeight: d.windWaveHeight ?? 0,
+        originalDate: new Date(d.date),
+      }))
+      .sort((a, b) => a.originalDate.getTime() - b.originalDate.getTime());
+
+    // 计算移动平均
+    const withAvg6h = calculateMovingAverage(baseData, 6, "windWaveHeight");
+    const withAvg12h = calculateMovingAverage(baseData, 12, "windWaveHeight");
+
+    // 合并所有平均值
+    return baseData.map((item, index) => ({
+      ...item,
+      windWaveHeightAvg6h: withAvg6h[index].windWaveHeightAvg6h,
+      windWaveHeightAvg12h: withAvg12h[index].windWaveHeightAvg12h,
+    })) as ProcessedWaveData[];
   }, [data]);
+
+  // 计算浪高范围
+  const waveHeightRange = React.useMemo(() => {
+    if (!waveHeightData.length) return { min: 0, max: 0 };
+    const values = waveHeightData
+      .map((d) => d.windWaveHeight)
+      .filter((v): v is number => v != null && !isNaN(v));
+    const minValue = Math.min(...values);
+    const maxValue = Math.max(...values);
+    const range = maxValue - minValue;
+    const padding = range * 0.1; // 增加 10% 的空白区域
+
+    const min = Math.floor((minValue - padding) * 10) / 10;
+    const max = Math.ceil((maxValue + padding) * 10) / 10;
+
+    // 生成刻度值数组，间隔0.1
+    const ticks = Array.from(
+      { length: Math.round((max - min) * 10) + 1 },
+      (_, i) => Math.round((min + i * 0.1) * 10) / 10
+    );
+    return { min, max, ticks };
+  }, [waveHeightData]);
 
   if (isLoading) {
     return (
@@ -78,70 +108,53 @@ export function CoastalWaveHeightChart({
     );
   }
 
-  if (!waveData?.length) {
+  if (!waveHeightData?.length) {
     return null;
   }
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>浪高变化</CardTitle>
-        <CardDescription>
-          {format(startDate, "MM-dd", { locale: zhCN })} 至{" "}
-          {format(endDate, "MM-dd", { locale: zhCN })}
-        </CardDescription>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <div>
+          <CardTitle>浪高变化</CardTitle>
+        </div>
+        <div className="flex items-center gap-2">
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={showAvg6h}
+              onChange={(e) => setShowAvg6h(e.target.checked)}
+              className="h-4 w-4 rounded border-gray-300"
+            />
+            6小时平均
+          </label>
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={showAvg12h}
+              onChange={(e) => setShowAvg12h(e.target.checked)}
+              className="h-4 w-4 rounded border-gray-300"
+            />
+            12小时平均
+          </label>
+        </div>
       </CardHeader>
       <CardContent>
-        <div className="h-[300px]">
-          <ChartContainer config={chartConfig}>
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart
-                data={waveData}
-                margin={{ top: 5, right: 30, left: 0, bottom: 5 }}
-                className="[&_.recharts-cartesian-grid-horizontal_line]:stroke-border [&_.recharts-cartesian-grid-vertical_line]:stroke-border"
-              >
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  horizontal={true}
-                  vertical={false}
-                  className="stroke-muted/50"
-                />
-                <XAxis
-                  dataKey="date"
-                  stroke="hsl(var(--muted-foreground))"
-                  fontSize={12}
-                  tickLine={false}
-                  axisLine={false}
-                  tickFormatter={(value) =>
-                    format(new Date(value), "HH:mm", { locale: zhCN })
-                  }
-                />
-                <YAxis
-                  stroke="hsl(var(--muted-foreground))"
-                  fontSize={12}
-                  tickLine={false}
-                  axisLine={false}
-                  tickFormatter={(value) => `${value}m`}
-                />
-                <ChartTooltip content={<ChartTooltipContent />} />
-                <Legend />
-                <Line
-                  name="浪高"
-                  type="monotone"
-                  dataKey="waveHeight"
-                  className="stroke-primary fill-primary/20"
-                  strokeWidth={2}
-                  dot={false}
-                  activeDot={{
-                    r: 4,
-                    className: "fill-primary stroke-background stroke-2",
-                  }}
-                  isAnimationActive={false}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </ChartContainer>
-        </div>
+        <BaseChart
+          data={waveHeightData}
+          dataKey="windWaveHeight"
+          color="hsl(201, 100%, 50%)"
+          showAvg6h={showAvg6h}
+          showAvg12h={showAvg12h}
+          onAvg6hChange={setShowAvg6h}
+          onAvg12hChange={setShowAvg12h}
+          avg6hColor="hsl(201, 100%, 65%)"
+          avg12hColor="hsl(201, 100%, 80%)"
+          unit="m"
+          name="浪高"
+          yAxisDomain={[waveHeightRange.min, waveHeightRange.max]}
+          yAxisTicks={waveHeightRange.ticks}
+        />
       </CardContent>
     </Card>
   );
