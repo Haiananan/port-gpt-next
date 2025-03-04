@@ -1,13 +1,7 @@
 "use client";
 
 import * as React from "react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { format } from "date-fns";
 import { zhCN } from "date-fns/locale";
 import { useQuery } from "@tanstack/react-query";
@@ -69,9 +63,6 @@ export function CoastalPressureChart({
   if (isLoading) {
     return (
       <Card>
-        <CardHeader>
-          <CardTitle>气压变化</CardTitle>
-        </CardHeader>
         <CardContent>
           <div className="h-[300px] flex items-center justify-center">
             加载中...
@@ -87,20 +78,16 @@ export function CoastalPressureChart({
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>气压变化趋势</CardTitle>
-        <Gauge className="h-4 w-4 text-muted-foreground" />
-      </CardHeader>
       <CardContent>
         <BaseChart
           data={pressureData}
           dataKey="airPressure"
-          color="hsl(280, 100%, 50%)"
+          color="hsl(41, 100%, 50%)"
           unit="hPa"
           name="气压"
           yAxisDomain={[pressureRange.min, pressureRange.max]}
           yAxisTicks={pressureRange.ticks}
-          fitColor="hsl(280, 100%, 65%)"
+          fitColor="hsl(41, 100%, 65%)"
           icon={Gauge}
         />
       </CardContent>

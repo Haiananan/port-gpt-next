@@ -1,13 +1,7 @@
 "use client";
 
 import * as React from "react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { format } from "date-fns";
 import { zhCN } from "date-fns/locale";
 import { useQuery } from "@tanstack/react-query";
@@ -80,9 +74,6 @@ export function CoastalWaveHeightChart({
   if (isLoading) {
     return (
       <Card>
-        <CardHeader>
-          <CardTitle>浪高变化</CardTitle>
-        </CardHeader>
         <CardContent>
           <div className="h-[300px] flex items-center justify-center">
             加载中...
@@ -98,10 +89,6 @@ export function CoastalWaveHeightChart({
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>波高变化趋势</CardTitle>
-        <Waves className="h-4 w-4 text-muted-foreground" />
-      </CardHeader>
       <CardContent>
         <BaseChart
           data={waveHeightData}

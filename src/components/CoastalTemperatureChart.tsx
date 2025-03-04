@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { format } from "date-fns";
 import { zhCN } from "date-fns/locale";
 import { useQuery } from "@tanstack/react-query";
@@ -102,19 +102,6 @@ export function CoastalTemperatureChart({
     return (
       <div className="space-y-4">
         <Card>
-          <CardHeader>
-            <CardTitle>气温变化趋势</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[300px] flex items-center justify-center">
-              加载中...
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>海温变化趋势</CardTitle>
-          </CardHeader>
           <CardContent>
             <div className="h-[300px] flex items-center justify-center">
               加载中...
@@ -132,10 +119,6 @@ export function CoastalTemperatureChart({
   return (
     <>
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>气温变化趋势</CardTitle>
-          <Thermometer className="h-4 w-4 text-muted-foreground" />
-        </CardHeader>
         <CardContent>
           <BaseChart
             data={temperatureData}
@@ -152,10 +135,6 @@ export function CoastalTemperatureChart({
       </Card>
 
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>海温变化趋势</CardTitle>
-          <Droplets className="h-4 w-4 text-muted-foreground" />
-        </CardHeader>
         <CardContent>
           <BaseChart
             data={temperatureData}
