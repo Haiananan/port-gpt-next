@@ -954,6 +954,7 @@ export function BaseChart({
 
             {showOriginal && (
               <Line
+                key="original"
                 name={name}
                 type="monotone"
                 dataKey={dataKey}
@@ -982,6 +983,7 @@ export function BaseChart({
             )}
             {showAnomalies && (
               <Scatter
+                key="anomalies"
                 name="异常点"
                 data={stats?.anomalies || []}
                 fill="#ef4444"
@@ -996,6 +998,7 @@ export function BaseChart({
             )}
             {showFit && (
               <Line
+                key="fit"
                 name="拟合曲线"
                 type="monotone"
                 dataKey={`${dataKey}Fit`}
@@ -1007,6 +1010,7 @@ export function BaseChart({
             )}
             {showTrend && (
               <Line
+                key="trend"
                 name="预测趋势"
                 type="monotone"
                 dataKey={`${dataKey}Trend`}
@@ -1018,6 +1022,7 @@ export function BaseChart({
             )}
             {showTrend && (
               <Line
+                key="trend-upper"
                 name="置信区间上限"
                 type="monotone"
                 dataKey={`${dataKey}TrendUpper`}
@@ -1030,6 +1035,7 @@ export function BaseChart({
             )}
             {showTrend && (
               <Line
+                key="trend-lower"
                 name="置信区间下限"
                 type="monotone"
                 dataKey={`${dataKey}TrendLower`}
