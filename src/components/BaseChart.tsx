@@ -120,7 +120,8 @@ export function BaseChart({
   yAxisDomain,
   yAxisTicks,
 }: BaseChartProps) {
-  const [showFit, setShowFit] = useState(false);
+  const [showFit, setShowFit] = useState(true);
+  const [showOriginal, setShowOriginal] = useState(true);
   // 用于区域选择缩放的状态
   const [refAreaLeft, setRefAreaLeft] = useState<string | null>(null);
   const [refAreaRight, setRefAreaRight] = useState<string | null>(null);
@@ -178,8 +179,21 @@ export function BaseChart({
 
   return (
     <div className="space-y-2">
-      <div className="flex justify-end items-center w-full space-x-4 pr-8">
-        <div className="flex items-center  gap-2">
+      <div className="flex justify-end items-center w-full space-x-4 px-6">
+        <div className="flex items-center gap-2">
+          <Checkbox
+            id="showOriginal"
+            checked={showOriginal}
+            onCheckedChange={(checked) => setShowOriginal(checked as boolean)}
+          />
+          <label
+            htmlFor="showOriginal"
+            className="text-sm text-muted-foreground"
+          >
+            原始曲线
+          </label>
+        </div>
+        <div className="flex items-center gap-2">
           <Checkbox
             id="showFit"
             checked={showFit}
@@ -256,14 +270,16 @@ export function BaseChart({
               }}
             />
             <Legend />
-            <Line
-              name={name}
-              type="monotone"
-              dataKey={dataKey}
-              stroke={color}
-              strokeWidth={2}
-              dot={false}
-            />
+            {showOriginal && (
+              <Line
+                name={name}
+                type="monotone"
+                dataKey={dataKey}
+                stroke={color}
+                strokeWidth={2}
+                dot={false}
+              />
+            )}
             {showFit && (
               <Line
                 name="拟合曲线"
