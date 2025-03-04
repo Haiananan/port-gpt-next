@@ -16,7 +16,7 @@ import { useState, useCallback, useMemo } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { Download } from "lucide-react";
+import { Download, RotateCcw } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -126,6 +126,43 @@ function gaussianElimination(A: number[][], b: number[]) {
   return x;
 }
 
+// 计算统计信息
+const getStats = (
+  data: any[],
+  key: string,
+  startDate?: string,
+  endDate?: string
+) => {
+  if (!data?.length) return null;
+
+  // 根据日期范围过滤数据
+  const filteredData =
+    startDate && endDate
+      ? data.filter((d) => d.date >= startDate && d.date <= endDate)
+      : data;
+
+  const values = filteredData
+    .map((d) => d[key])
+    .filter((v) => v != null && !isNaN(v) && typeof v === "number");
+
+  if (!values.length) return null;
+
+  const max = Math.max(...values);
+  const min = Math.min(...values);
+  const avg = values.reduce((a, b) => a + b, 0) / values.length;
+  const current = values[values.length - 1];
+
+  return {
+    max,
+    min,
+    avg,
+    current,
+    trend: current > values[0] ? "up" : "down",
+    count: values.length,
+    total: data.length,
+  };
+};
+
 // 基础图表组件
 export function BaseChart({
   data,
@@ -144,6 +181,12 @@ export function BaseChart({
     x?: [string, string];
     y?: [number, number];
   }>({});
+
+  // 计算统计数据
+  const stats = useMemo(() => {
+    const [start, end] = zoomDomain.x || [];
+    return getStats(data, dataKey, start, end);
+  }, [data, dataKey, zoomDomain]);
 
   // 计算 Y 轴范围
   const yAxisConfig = useMemo(() => {
@@ -316,6 +359,20 @@ export function BaseChart({
               拟合曲线
             </label>
           </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleResetZoom}
+            className={
+              Object.keys(zoomDomain).length === 0
+                ? "opacity-50 cursor-not-allowed"
+                : ""
+            }
+            disabled={Object.keys(zoomDomain).length === 0}
+          >
+            <RotateCcw className="h-4 w-4 mr-2" />
+            重置范围
+          </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm">
@@ -337,6 +394,57 @@ export function BaseChart({
           </DropdownMenu>
         </div>
       </div>
+
+      {stats && (
+        <div className="grid grid-cols-4 gap-4 mb-4 p-4 bg-muted rounded-lg">
+          <div className="flex flex-col">
+            <span className="text-sm text-muted-foreground">最大值</span>
+            <div className="flex items-center gap-2">
+              <span className="text-lg font-bold">
+                {stats.max.toFixed(1)}
+                {unit}
+              </span>
+            </div>
+          </div>
+          <div className="flex flex-col">
+            <span className="text-sm text-muted-foreground">最小值</span>
+            <div className="flex items-center gap-2">
+              <span className="text-lg font-bold">
+                {stats.min.toFixed(1)}
+                {unit}
+              </span>
+            </div>
+          </div>
+          <div className="flex flex-col">
+            <span className="text-sm text-muted-foreground">平均值</span>
+            <div className="flex items-center gap-2">
+              <span className="text-lg font-bold">
+                {stats.avg.toFixed(1)}
+                {unit}
+              </span>
+              <span className="text-xs text-muted-foreground">
+                ({stats.count}/{stats.total}个数据点)
+              </span>
+            </div>
+          </div>
+          <div className="flex flex-col">
+            <span className="text-sm text-muted-foreground">当前值</span>
+            <div className="flex items-center gap-2">
+              <span className="text-lg font-bold">
+                {stats.current.toFixed(1)}
+                {unit}
+              </span>
+              <span
+                className={`text-sm ${
+                  stats.trend === "up" ? "text-green-500" : "text-red-500"
+                }`}
+              >
+                {stats.trend === "up" ? "↑" : "↓"}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="h-[300px]" id={`chart-${name}`}>
         <ResponsiveContainer width="100%" height="100%">
