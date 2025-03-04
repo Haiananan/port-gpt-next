@@ -15,6 +15,8 @@ import { CoastalWaveHeightChart } from "@/components/CoastalWaveHeightChart";
 import { CoastalStats } from "@/components/CoastalStats";
 import { Header } from "@/components/ui/header";
 import { CoastalWindSpeedChart } from "@/components/CoastalWindSpeedChart";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ChartBar, Table2 } from "lucide-react";
 
 export default function DataQueryComponent() {
   const [station, setStation] = useState<string>("XCS");
@@ -66,7 +68,7 @@ export default function DataQueryComponent() {
   return (
     <main className="min-h-screen">
       <Header />
-      <div className=" p-4 space-y-6 mx-auto">
+      <div className="container mx-auto p-4 space-y-6">
         <CoastalQueryForm
           station={station}
           startDate={startDate}
@@ -82,70 +84,88 @@ export default function DataQueryComponent() {
           </Alert>
         ) : (
           <>
-            <CoastalStats
-              station={station}
-              startDate={startDate}
-              endDate={endDate}
-            />
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <CoastalTemperatureChart
-                station={station}
-                startDate={startDate}
-                endDate={endDate}
-              />
+            <Tabs defaultValue="charts" className="w-full">
+              <div className="flex justify-start mb-6">
+                <TabsList className="inline-flex">
+                  <TabsTrigger
+                    value="charts"
+                    className="flex items-center gap-2"
+                  >
+                    <ChartBar className="h-4 w-4" />
+                    图表可视化
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="table"
+                    className="flex items-center gap-2"
+                  >
+                    <Table2 className="h-4 w-4" />
+                    数据表格
+                  </TabsTrigger>
+                </TabsList>
+              </div>
 
-              <CoastalPressureChart
-                station={station}
-                startDate={startDate}
-                endDate={endDate}
-              />
-
-              <CoastalWaveHeightChart
-                station={station}
-                startDate={startDate}
-                endDate={endDate}
-              />
-
-              <CoastalWavePeriodChart
-                station={station}
-                startDate={startDate}
-                endDate={endDate}
-              />
-              <CoastalWindSpeedChart
-                station={station}
-                startDate={startDate}
-                endDate={endDate}
-              />
-              <div className=" col-span-2">
-                <CoastalWindChart
+              <TabsContent value="charts" className="space-y-6">
+                <CoastalStats
                   station={station}
                   startDate={startDate}
                   endDate={endDate}
                 />
-              </div>
-            </div>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <CoastalTemperatureChart
+                    station={station}
+                    startDate={startDate}
+                    endDate={endDate}
+                  />
+                  <CoastalPressureChart
+                    station={station}
+                    startDate={startDate}
+                    endDate={endDate}
+                  />
+                  <CoastalWaveHeightChart
+                    station={station}
+                    startDate={startDate}
+                    endDate={endDate}
+                  />
+                  <CoastalWavePeriodChart
+                    station={station}
+                    startDate={startDate}
+                    endDate={endDate}
+                  />
+                  <CoastalWindSpeedChart
+                    station={station}
+                    startDate={startDate}
+                    endDate={endDate}
+                  />
+                </div>
+                <div className="mt-6">
+                  <CoastalWindChart
+                    station={station}
+                    startDate={startDate}
+                    endDate={endDate}
+                  />
+                </div>
+              </TabsContent>
 
-            {isLoading && (
-              <div className="space-y-3">
-                <Skeleton className="h-[400px] w-full" />
-              </div>
-            )}
-
-            {error && (
-              <Alert variant="destructive">
-                <AlertDescription>错误: {error.message}</AlertDescription>
-              </Alert>
-            )}
-
-            {data && (
-              <CoastalDataTable
-                data={data.data}
-                total={data.pagination.total}
-                page={data.pagination.page}
-                totalPages={data.pagination.totalPages}
-                onPageChange={setPage}
-              />
-            )}
+              <TabsContent value="table" className="min-h-[500px]">
+                {isLoading ? (
+                  <div className="space-y-3">
+                    <Skeleton className="h-[500px] w-full" />
+                  </div>
+                ) : error ? (
+                  <Alert variant="destructive">
+                    <AlertDescription>错误: {error.message}</AlertDescription>
+                  </Alert>
+                ) : data ? (
+                  <CoastalDataTable
+                    data={data.data}
+                    total={data.pagination.total}
+                    page={data.pagination.page}
+                    totalPages={data.pagination.totalPages}
+                    onPageChange={setPage}
+                  />
+                ) : null}
+              </TabsContent>
+            </Tabs>
           </>
         )}
       </div>
