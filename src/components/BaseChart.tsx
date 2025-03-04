@@ -221,36 +221,83 @@ function calculateTrendLine(
     x: new Date(d.date).getTime(),
     y: d[field] || 0,
     date: d.date,
+    hour: new Date(d.date).getHours(),
+    dayOfWeek: new Date(d.date).getDay(),
   }));
 
+  // 分析数据的周期性模式
+  const hourlyPatterns: number[][] = new Array(24).fill(0).map(() => []);
+  const dailyPatterns: number[][] = new Array(7).fill(0).map(() => []);
+
+  points.forEach((point) => {
+    hourlyPatterns[point.hour].push(point.y);
+    dailyPatterns[point.dayOfWeek].push(point.y);
+  });
+
+  // 计算每小时的平均值和标准差
+  const hourlyStats = hourlyPatterns.map((values) => {
+    const avg = values.reduce((a, b) => a + b, 0) / values.length;
+    const variance =
+      values.reduce((sum, val) => sum + Math.pow(val - avg, 2), 0) /
+      values.length;
+    return { avg, std: Math.sqrt(variance) };
+  });
+
+  // 计算每天的平均值和标准差
+  const dailyStats = dailyPatterns.map((values) => {
+    const avg = values.reduce((a, b) => a + b, 0) / values.length;
+    const variance =
+      values.reduce((sum, val) => sum + Math.pow(val - avg, 2), 0) /
+      values.length;
+    return { avg, std: Math.sqrt(variance) };
+  });
+
+  // 数据预处理：移除异常值并标准化
+  const values = points.map((p) => p.y);
+  const mean = values.reduce((a, b) => a + b, 0) / values.length;
+  const stdDev = Math.sqrt(
+    values.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) /
+      values.length
+  );
+  const validPoints = points.filter((p) => Math.abs(p.y - mean) <= 3 * stdDev);
+
   // 标准化 x 值以避免数值过大
-  const minX = points[0].x;
-  const maxX = points[points.length - 1].x;
-  const normalizedPoints = points.map((p) => ({
+  const minX = validPoints[0].x;
+  const maxX = validPoints[validPoints.length - 1].x;
+  const normalizedPoints = validPoints.map((p) => ({
     x: (p.x - minX) / (60 * 60 * 1000), // 转换为小时数
     y: p.y,
     date: p.date,
+    hour: p.hour,
+    dayOfWeek: p.dayOfWeek,
   }));
 
-  // 使用多项式回归进行预测
-  const degree = 3; // 使用3次多项式
+  // 自适应选择多项式阶数
   const n = normalizedPoints.length;
+  const maxDegree = Math.min(5, Math.floor(Math.sqrt(n))); // 根据数据量自适应阶数
 
-  // 构建矩阵A
+  // 计算时间权重（近期数据权重更大）
+  const weights = normalizedPoints.map((_, i) =>
+    Math.exp(
+      (i - normalizedPoints.length + 1) / (normalizedPoints.length * 0.5)
+    )
+  );
+
+  // 构建加权矩阵A
   const A: number[][] = [];
   for (let i = 0; i < n; i++) {
     const row: number[] = [];
-    for (let j = 0; j <= degree; j++) {
-      row.push(Math.pow(normalizedPoints[i].x, j));
+    for (let j = 0; j <= maxDegree; j++) {
+      row.push(Math.pow(normalizedPoints[i].x, j) * weights[i]);
     }
     A.push(row);
   }
 
-  // 构建向量b
-  const b = normalizedPoints.map((p) => p.y);
+  // 构建加权向量b
+  const b = normalizedPoints.map((p, i) => p.y * weights[i]);
 
-  // 使用最小二乘法求解系数
-  const AT = A[0].map((_, i) => A.map((row) => row[i])); // 转置
+  // 使用加权最小二乘法求解系数
+  const AT = A[0].map((_, i) => A.map((row) => row[i]));
   const ATA = AT.map((row) => {
     return A[0].map((_, j) => {
       return row.reduce((sum, val, k) => sum + val * A[k][j], 0);
@@ -261,16 +308,19 @@ function calculateTrendLine(
   // 求解系数
   const coefficients = gaussianElimination(ATA, ATb);
 
-  // 计算预测的标准误差
-  const errors = normalizedPoints.map((point) => {
+  // 计算预测的标准误差，考虑权重
+  const errors = normalizedPoints.map((point, i) => {
     const predicted = coefficients.reduce(
       (sum, coef, power) => sum + coef * Math.pow(point.x, power),
       0
     );
-    return (point.y - predicted) ** 2;
+    return weights[i] * Math.pow(point.y - predicted, 2);
   });
+
+  // 计算加权标准误差
+  const weightSum = weights.reduce((a, b) => a + b, 0);
   const standardError = Math.sqrt(
-    errors.reduce((a, b) => a + b, 0) / (n - degree - 1)
+    errors.reduce((a, b) => a + b, 0) / (weightSum - maxDegree - 1)
   );
 
   // 生成趋势线数据，包括预测部分
@@ -284,17 +334,37 @@ function calculateTrendLine(
     nextDate.setHours(nextDate.getHours() + i);
     const dateStr = nextDate.toISOString().split(".")[0].replace("T", " ");
     const x = lastX + i;
+    const hour = nextDate.getHours();
+    const dayOfWeek = nextDate.getDay();
 
-    // 计算预测值
-    const predictedValue = coefficients.reduce(
+    // 基础预测值
+    const basePrediction = coefficients.reduce(
       (sum, coef, power) => sum + coef * Math.pow(x, power),
       0
     );
 
-    // 计算95%置信区间
+    // 考虑历史规律进行修正
+    const hourlyPattern = hourlyStats[hour];
+    const dailyPattern = dailyStats[dayOfWeek];
+
+    // 结合趋势预测和历史规律
+    const seasonalFactor =
+      (hourlyPattern.avg / mean + dailyPattern.avg / mean) / 2;
+    const predictedValue = basePrediction * seasonalFactor;
+
+    // 计算动态置信区间
+    const distanceFromMean = Math.abs(
+      x - normalizedPoints.reduce((sum, p) => sum + p.x, 0) / n
+    );
+    const confidenceFactor = 1 + distanceFromMean / (lastX * 2);
+
+    // 考虑历史波动性调整置信区间
+    const historicalVariability = (hourlyPattern.std + dailyPattern.std) / 2;
     const confidenceInterval =
       1.96 *
       standardError *
+      confidenceFactor *
+      Math.sqrt(1 + historicalVariability / mean) *
       Math.sqrt(
         1 +
           1 / n +
@@ -326,13 +396,22 @@ function calculateTrendLine(
   return trendData.map((d) => {
     if (d.isPrediction) return d;
     const x = (new Date(d.date).getTime() - minX) / (60 * 60 * 1000);
-    const predictedValue = coefficients.reduce(
+    const hour = new Date(d.date).getHours();
+    const dayOfWeek = new Date(d.date).getDay();
+
+    const basePrediction = coefficients.reduce(
       (sum, coef, power) => sum + coef * Math.pow(x, power),
       0
     );
+
+    const hourlyPattern = hourlyStats[hour];
+    const dailyPattern = dailyStats[dayOfWeek];
+    const seasonalFactor =
+      (hourlyPattern.avg / mean + dailyPattern.avg / mean) / 2;
+
     return {
       ...d,
-      [`${field}Trend`]: predictedValue,
+      [`${field}Trend`]: basePrediction * seasonalFactor,
     };
   });
 }
@@ -354,7 +433,7 @@ export function BaseChart({
 
   const [showFit, setShowFit] = useState(true);
   const [showOriginal, setShowOriginal] = useState(true);
-  const [showStats, setShowStats] = useState(true);
+  const [showStats, setShowStats] = useState(false);
   const [showAnomalies, setShowAnomalies] = useState(true);
   const [showTrend, setShowTrend] = useState(false);
   const [refAreaLeft, setRefAreaLeft] = useState<string | null>(null);
