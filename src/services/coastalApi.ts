@@ -102,6 +102,25 @@ export async function fetchWaveData(
   return response.json();
 }
 
+export async function fetchWindSpeedData(
+  station: string,
+  startDate: string,
+  endDate: string
+): Promise<CoastalStationData[]> {
+  const params = new URLSearchParams({
+    station,
+    startDate,
+    endDate,
+    fields: "date,windSpeed",
+  });
+
+  const response = await fetch(`/api/chartData?${params.toString()}`);
+  if (!response.ok) {
+    throw new Error("获取风力数据失败");
+  }
+  return response.json();
+}
+
 export interface StatsResponse {
   temperature: {
     max: number;

@@ -55,11 +55,31 @@ const getWindSpeedColor = (speed: number) => {
 
 // 风速等级说明
 const WIND_LEVELS = [
-  { name: "微风", range: "<2m/s", color: "hsl(142.1 76.2% 36.3%)", maxSpeed: 2 },
-  { name: "轻风", range: "2-5m/s", color: "hsl(221.2 83.2% 53.3%)", maxSpeed: 5 },
-  { name: "和风", range: "5-8m/s", color: "hsl(35.3 91.2% 51.6%)", maxSpeed: 8 },
+  {
+    name: "微风",
+    range: "<2m/s",
+    color: "hsl(142.1 76.2% 36.3%)",
+    maxSpeed: 2,
+  },
+  {
+    name: "轻风",
+    range: "2-5m/s",
+    color: "hsl(221.2 83.2% 53.3%)",
+    maxSpeed: 5,
+  },
+  {
+    name: "和风",
+    range: "5-8m/s",
+    color: "hsl(35.3 91.2% 51.6%)",
+    maxSpeed: 8,
+  },
   { name: "强风", range: "8-11m/s", color: "hsl(0 84.2% 60.2%)", maxSpeed: 11 },
-  { name: "大风", range: ">11m/s", color: "hsl(262.1 83.3% 57.8%)", maxSpeed: Infinity },
+  {
+    name: "大风",
+    range: ">11m/s",
+    color: "hsl(262.1 83.3% 57.8%)",
+    maxSpeed: Infinity,
+  },
 ];
 
 export function CoastalWindChart({
@@ -104,7 +124,8 @@ export function CoastalWindChart({
     windData
       .filter((item) => item.windDirection !== null && item.windSpeed !== null)
       .forEach((item) => {
-        const dirIndex = Math.round(((item.windDirection! + 360) % 360) / 45) % 8;
+        const dirIndex =
+          Math.round(((item.windDirection! + 360) % 360) / 45) % 8;
         const speed = item.windSpeed!;
         totalRecords++;
 
@@ -120,13 +141,13 @@ export function CoastalWindChart({
     // 计算每个方向的主导风速和百分比
     directionData.forEach((data) => {
       data.percentage = (data.total / totalRecords) * 100;
-      
+
       // 找出主导风速
-      const speeds = WIND_LEVELS.map(level => ({
+      const speeds = WIND_LEVELS.map((level) => ({
         name: level.name,
-        count: data[level.name] as number
+        count: data[level.name] as number,
       }));
-      data.dominantSpeed = speeds.reduce((a, b) => 
+      data.dominantSpeed = speeds.reduce((a, b) =>
         (data[a.name] as number) > (data[b.name] as number) ? a : b
       ).name;
     });
@@ -183,7 +204,7 @@ export function CoastalWindChart({
   }
 
   // 计算主导风向
-  const dominantDirection = chartData.reduce((a, b) => 
+  const dominantDirection = chartData.reduce((a, b) =>
     a.total > b.total ? a : b
   );
 
@@ -193,7 +214,8 @@ export function CoastalWindChart({
         <div>
           <CardTitle>风向玫瑰图</CardTitle>
           <p className="text-sm text-muted-foreground mt-1">
-            主导风向: {dominantDirection.direction} ({dominantDirection.dominantSpeed})
+            主导风向: {dominantDirection.direction} (
+            {dominantDirection.dominantSpeed})
             {showPercentage && ` - ${dominantDirection.percentage.toFixed(1)}%`}
           </p>
         </div>
@@ -210,8 +232,8 @@ export function CoastalWindChart({
         </div>
       </CardHeader>
       <CardContent>
-        <div 
-          className="h-[400px]" 
+        <div
+          className="h-[400px]"
           onWheel={handleWheel}
           style={{ cursor: "zoom-in" }}
         >
@@ -232,9 +254,13 @@ export function CoastalWindChart({
                 angle={90}
                 domain={[0, "auto"]}
                 tick={{ fill: "hsl(var(--foreground))" }}
-                tickFormatter={(value) => 
-                  showPercentage 
-                    ? `${((value / chartData.reduce((sum, d) => sum + d.total, 0)) * 100).toFixed(1)}%`
+                tickFormatter={(value) =>
+                  showPercentage
+                    ? `${(
+                        (value /
+                          chartData.reduce((sum, d) => sum + d.total, 0)) *
+                        100
+                      ).toFixed(1)}%`
                     : value.toString()
                 }
               />
@@ -248,10 +274,9 @@ export function CoastalWindChart({
                           <div className="font-bold flex items-center justify-between">
                             <span>{data.direction}</span>
                             <span className="text-sm text-muted-foreground">
-                              {showPercentage 
+                              {showPercentage
                                 ? `${data.percentage.toFixed(1)}%`
-                                : `${data.total}次`
-                              }
+                                : `${data.total}次`}
                             </span>
                           </div>
                           {WIND_LEVELS.map((level) => (
@@ -259,7 +284,10 @@ export function CoastalWindChart({
                               key={level.name}
                               className="flex items-center justify-between gap-2"
                               style={{
-                                opacity: selectedLevel && selectedLevel !== level.name ? 0.5 : 1
+                                opacity:
+                                  selectedLevel && selectedLevel !== level.name
+                                    ? 0.5
+                                    : 1,
                               }}
                             >
                               <div className="flex items-center gap-2">
@@ -271,9 +299,12 @@ export function CoastalWindChart({
                               </div>
                               <span>
                                 {showPercentage
-                                  ? `${((data[level.name] as number / data.total) * 100).toFixed(1)}%`
-                                  : data[level.name]
-                                }
+                                  ? `${(
+                                      ((data[level.name] as number) /
+                                        data.total) *
+                                      100
+                                    ).toFixed(1)}%`
+                                  : data[level.name]}
                               </span>
                             </div>
                           ))}
@@ -291,7 +322,13 @@ export function CoastalWindChart({
                   dataKey={level.name}
                   stroke={level.color}
                   fill={level.color}
-                  fillOpacity={selectedLevel === level.name ? 0.8 : selectedLevel ? 0.2 : 0.6}
+                  fillOpacity={
+                    selectedLevel === level.name
+                      ? 0.8
+                      : selectedLevel
+                      ? 0.2
+                      : 0.6
+                  }
                   isAnimationActive={false}
                 />
               ))}
@@ -303,9 +340,14 @@ export function CoastalWindChart({
                 key={level.name}
                 className="flex items-center gap-1.5 cursor-pointer transition-opacity duration-200 whitespace-nowrap"
                 style={{
-                  opacity: selectedLevel && selectedLevel !== level.name ? 0.5 : 1
+                  opacity:
+                    selectedLevel && selectedLevel !== level.name ? 0.5 : 1,
                 }}
-                onClick={() => setSelectedLevel(selectedLevel === level.name ? null : level.name)}
+                onClick={() =>
+                  setSelectedLevel(
+                    selectedLevel === level.name ? null : level.name
+                  )
+                }
               >
                 <div
                   className="w-2.5 h-2.5 rounded-full flex-shrink-0"

@@ -14,6 +14,7 @@ import { CoastalWavePeriodChart } from "@/components/CoastalWavePeriodChart";
 import { CoastalWaveHeightChart } from "@/components/CoastalWaveHeightChart";
 import { CoastalStats } from "@/components/CoastalStats";
 import { Header } from "@/components/ui/header";
+import { CoastalWindSpeedChart } from "@/components/CoastalWindSpeedChart";
 
 export default function DataQueryComponent() {
   const [station, setStation] = useState<string>("XCS");
@@ -110,12 +111,18 @@ export default function DataQueryComponent() {
                 startDate={startDate}
                 endDate={endDate}
               />
-
-              <CoastalWindChart
+              <CoastalWindSpeedChart
                 station={station}
                 startDate={startDate}
                 endDate={endDate}
               />
+              <div className=" col-span-2">
+                <CoastalWindChart
+                  station={station}
+                  startDate={startDate}
+                  endDate={endDate}
+                />
+              </div>
             </div>
 
             {isLoading && (
