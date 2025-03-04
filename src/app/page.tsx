@@ -113,7 +113,7 @@ export default function DataQueryComponent() {
                   startDate={startDate}
                   endDate={endDate}
                 />
-                <div className="grid grid-cols-1 lg:grid-cols-1 gap-6">
+                <div className="grid grid-cols-1 gap-6">
                   <CoastalAirTemperatureChart
                     station={station}
                     startDate={startDate}
