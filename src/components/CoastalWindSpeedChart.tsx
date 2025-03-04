@@ -54,27 +54,6 @@ export function CoastalWindSpeedChart({
       .sort((a, b) => a.originalDate.getTime() - b.originalDate.getTime());
   }, [data]);
 
-  // 计算风速范围
-  const windSpeedRange = React.useMemo(() => {
-    if (!windSpeedData.length) return { min: 0, max: 0 };
-    const values = windSpeedData
-      .map((d) => d.windSpeed)
-      .filter((v): v is number => v != null && !isNaN(v));
-    const minValue = Math.min(...values);
-    const maxValue = Math.max(...values);
-    const range = maxValue - minValue;
-    const padding = range * 0.1;
-
-    const min = Math.floor((minValue - padding) * 10) / 10;
-    const max = Math.ceil((maxValue + padding) * 10) / 10;
-
-    const ticks = Array.from(
-      { length: Math.round((max - min) * 2) + 1 },
-      (_, i) => Math.round((min + i * 0.5) * 10) / 10
-    );
-    return { min, max, ticks };
-  }, [windSpeedData]);
-
   if (isLoading) {
     return (
       <Card>
@@ -100,10 +79,8 @@ export function CoastalWindSpeedChart({
           color="hsl(142.1 76.2% 36.3%)"
           unit="m/s"
           name="风速"
-          yAxisDomain={[windSpeedRange.min, windSpeedRange.max]}
-          yAxisTicks={windSpeedRange.ticks}
-          fitColor="hsl(142.1 76.2% 50%)"
           icon={Wind}
+          fitColor="hsl(142.1 76.2% 50%)"
         />
       </CardContent>
     </Card>

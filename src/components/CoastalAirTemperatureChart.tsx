@@ -54,27 +54,6 @@ export function CoastalAirTemperatureChart({
       .sort((a, b) => a.originalDate.getTime() - b.originalDate.getTime());
   }, [data]);
 
-  // 计算气温范围
-  const airTemperatureRange = React.useMemo(() => {
-    if (!temperatureData.length) return { min: 0, max: 0 };
-    const values = temperatureData
-      .map((d) => d.airTemperature)
-      .filter((v): v is number => v != null && !isNaN(v));
-    const minValue = Math.min(...values);
-    const maxValue = Math.max(...values);
-    const range = maxValue - minValue;
-    const padding = range * 0.1;
-
-    const min = Math.floor((minValue - padding) * 10) / 10;
-    const max = Math.ceil((maxValue + padding) * 10) / 10;
-
-    const ticks = Array.from(
-      { length: Math.round((max - min) * 2) + 1 },
-      (_, i) => Math.round((min + i * 0.5) * 10) / 10
-    );
-    return { min, max, ticks };
-  }, [temperatureData]);
-
   if (isLoading) {
     return (
       <Card>
@@ -100,10 +79,8 @@ export function CoastalAirTemperatureChart({
           color="hsl(0, 100%, 50%)"
           unit="°C"
           name="气温"
-          yAxisDomain={[airTemperatureRange.min, airTemperatureRange.max]}
-          yAxisTicks={airTemperatureRange.ticks}
-          fitColor="hsl(0, 100%, 65%)"
           icon={Thermometer}
+          fitColor="hsl(0, 100%, 65%)"
         />
       </CardContent>
     </Card>

@@ -50,27 +50,6 @@ export function CoastalWaveHeightChart({
       .sort((a, b) => a.originalDate.getTime() - b.originalDate.getTime());
   }, [data]);
 
-  // 计算浪高范围
-  const waveHeightRange = React.useMemo(() => {
-    if (!waveHeightData.length) return { min: 0, max: 0 };
-    const values = waveHeightData
-      .map((d) => d.windWaveHeight)
-      .filter((v): v is number => v != null && !isNaN(v));
-    const minValue = Math.min(...values);
-    const maxValue = Math.max(...values);
-    const range = maxValue - minValue;
-    const padding = range * 0.1;
-
-    const min = Math.floor((minValue - padding) * 10) / 10;
-    const max = Math.ceil((maxValue + padding) * 10) / 10;
-
-    const ticks = Array.from(
-      { length: Math.round((max - min) * 10) + 1 },
-      (_, i) => Math.round((min + i * 0.1) * 10) / 10
-    );
-    return { min, max, ticks };
-  }, [waveHeightData]);
-
   if (isLoading) {
     return (
       <Card>
@@ -96,10 +75,8 @@ export function CoastalWaveHeightChart({
           color="hsl(35.3 91.2% 51.6%)"
           unit="m"
           name="浪高"
-          yAxisDomain={[waveHeightRange.min, waveHeightRange.max]}
-          yAxisTicks={waveHeightRange.ticks}
-          fitColor="hsl(35.3 91.2% 65%)"
           icon={Waves}
+          fitColor="hsl(35.3 91.2% 65%)"
         />
       </CardContent>
     </Card>

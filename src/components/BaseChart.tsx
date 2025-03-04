@@ -21,8 +21,6 @@ export interface BaseChartProps {
   fitColor?: string;
   unit?: string;
   name?: string;
-  yAxisDomain?: [number, number];
-  yAxisTicks?: number[];
   icon?: React.ElementType;
 }
 
@@ -119,8 +117,6 @@ export function BaseChart({
   fitColor = "#8884d8",
   unit = "",
   name,
-  yAxisDomain,
-  yAxisTicks,
   icon,
 }: BaseChartProps) {
   const [showFit, setShowFit] = useState(true);
@@ -133,6 +129,29 @@ export function BaseChart({
     x?: [string, string];
     y?: [number, number];
   }>({});
+
+  // 计算 Y 轴范围
+  const yAxisConfig = useMemo(() => {
+    if (!data.length) return { domain: [0, 0], ticks: [] };
+    const values = data
+      .map((d) => d[dataKey])
+      .filter((v): v is number => v != null && !isNaN(v));
+    const minValue = Math.min(...values);
+    const maxValue = Math.max(...values);
+    const range = maxValue - minValue;
+    const padding = range * 0.1;
+
+    const min = Math.floor((minValue - padding) * 10) / 10;
+    const max = Math.ceil((maxValue + padding) * 10) / 10;
+
+    const tickCount = Math.round((max - min) * 2) + 1;
+    const ticks = Array.from(
+      { length: tickCount },
+      (_, i) => Math.round((min + i * 0.5) * 10) / 10
+    );
+
+    return { domain: [min, max] as [number, number], ticks };
+  }, [data, dataKey]);
 
   // 处理鼠标事件
   const handleMouseDown = useCallback((e: any) => {
@@ -239,8 +258,8 @@ export function BaseChart({
               tickLine={false}
               axisLine={false}
               tickFormatter={(value) => `${value}${unit}`}
-              domain={zoomDomain.y || yAxisDomain || ["auto", "auto"]}
-              ticks={yAxisTicks}
+              domain={zoomDomain.y || yAxisConfig.domain}
+              ticks={yAxisConfig.ticks}
               allowDataOverflow
             />
             <Tooltip

@@ -48,18 +48,6 @@ export function CoastalPressureChart({
       .sort((a, b) => a.originalDate.getTime() - b.originalDate.getTime());
   }, [data]);
 
-  // 计算气压范围
-  const pressureRange = React.useMemo(() => {
-    if (!pressureData.length) return { min: 0, max: 0 };
-    const values = pressureData
-      .map((d) => d.airPressure)
-      .filter((v) => v != null);
-    const min = Math.floor(Math.min(...values));
-    const max = Math.ceil(Math.max(...values));
-    const ticks = Array.from({ length: max - min + 1 }, (_, i) => min + i);
-    return { min, max, ticks };
-  }, [pressureData]);
-
   if (isLoading) {
     return (
       <Card>
@@ -85,10 +73,8 @@ export function CoastalPressureChart({
           color="hsl(41, 100%, 50%)"
           unit="hPa"
           name="气压"
-          yAxisDomain={[pressureRange.min, pressureRange.max]}
-          yAxisTicks={pressureRange.ticks}
-          fitColor="hsl(41, 100%, 65%)"
           icon={Gauge}
+          fitColor="hsl(41, 100%, 65%)"
         />
       </CardContent>
     </Card>
