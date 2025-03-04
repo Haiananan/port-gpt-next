@@ -173,6 +173,10 @@ export function BaseChart({
   name = "",
   icon,
 }: BaseChartProps) {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
   const [showFit, setShowFit] = useState(true);
   const [showOriginal, setShowOriginal] = useState(true);
   const [refAreaLeft, setRefAreaLeft] = useState<string | null>(null);
