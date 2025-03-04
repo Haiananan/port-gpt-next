@@ -13,6 +13,8 @@ import { zhCN } from "date-fns/locale";
 import { useQuery } from "@tanstack/react-query";
 import { fetchPressureData } from "@/services/coastalApi";
 import { BaseChart } from "@/components/BaseChart";
+import { CoastalStationData } from "@/types/coastal";
+import { Gauge } from "lucide-react";
 
 interface CoastalPressureChartProps {
   station: string;
@@ -85,19 +87,21 @@ export function CoastalPressureChart({
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>气压变化</CardTitle>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <CardTitle>气压变化趋势</CardTitle>
+        <Gauge className="h-4 w-4 text-muted-foreground" />
       </CardHeader>
       <CardContent>
         <BaseChart
           data={pressureData}
           dataKey="airPressure"
-          color="hsl(41, 100%, 50%)"
+          color="hsl(280, 100%, 50%)"
           unit="hPa"
           name="气压"
           yAxisDomain={[pressureRange.min, pressureRange.max]}
           yAxisTicks={pressureRange.ticks}
-          fitColor="hsl(41, 100%, 65%)"
+          fitColor="hsl(280, 100%, 65%)"
+          icon={Gauge}
         />
       </CardContent>
     </Card>

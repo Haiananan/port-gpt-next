@@ -14,6 +14,7 @@ import { useQuery } from "@tanstack/react-query";
 import { fetchWaveData } from "@/services/coastalApi";
 import { BaseChart } from "@/components/BaseChart";
 import { CoastalStationData } from "@/types/coastal";
+import { Waves } from "lucide-react";
 
 interface ProcessedWaveData {
   date: string;
@@ -97,8 +98,9 @@ export function CoastalWaveHeightChart({
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>浪高变化</CardTitle>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <CardTitle>波高变化趋势</CardTitle>
+        <Waves className="h-4 w-4 text-muted-foreground" />
       </CardHeader>
       <CardContent>
         <BaseChart
@@ -110,6 +112,7 @@ export function CoastalWaveHeightChart({
           yAxisDomain={[waveHeightRange.min, waveHeightRange.max]}
           yAxisTicks={waveHeightRange.ticks}
           fitColor="hsl(35.3 91.2% 65%)"
+          icon={Waves}
         />
       </CardContent>
     </Card>

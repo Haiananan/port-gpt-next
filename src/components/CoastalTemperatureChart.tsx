@@ -8,6 +8,7 @@ import { useQuery } from "@tanstack/react-query";
 import { fetchTemperatureData } from "@/services/coastalApi";
 import { BaseChart } from "@/components/BaseChart";
 import { CoastalStationData } from "@/types/coastal";
+import { Thermometer, Droplets } from "lucide-react";
 
 interface ProcessedTemperatureData {
   date: string;
@@ -131,8 +132,9 @@ export function CoastalTemperatureChart({
   return (
     <>
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>气温变化趋势</CardTitle>
+          <Thermometer className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
           <BaseChart
@@ -144,13 +146,15 @@ export function CoastalTemperatureChart({
             yAxisDomain={[airTemperatureRange.min, airTemperatureRange.max]}
             yAxisTicks={airTemperatureRange.ticks}
             fitColor="hsl(0, 100%, 65%)"
+            icon={Thermometer}
           />
         </CardContent>
       </Card>
 
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>海温变化趋势</CardTitle>
+          <Droplets className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
           <BaseChart
@@ -162,6 +166,7 @@ export function CoastalTemperatureChart({
             yAxisDomain={[seaTemperatureRange.min, seaTemperatureRange.max]}
             yAxisTicks={seaTemperatureRange.ticks}
             fitColor="hsl(200, 100%, 65%)"
+            icon={Droplets}
           />
         </CardContent>
       </Card>

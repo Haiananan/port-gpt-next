@@ -8,6 +8,7 @@ import { useQuery } from "@tanstack/react-query";
 import { fetchWindSpeedData } from "@/services/coastalApi";
 import { BaseChart } from "@/components/BaseChart";
 import { CoastalStationData } from "@/types/coastal";
+import { Wind } from "lucide-react";
 
 interface ProcessedWindSpeedData {
   date: string;
@@ -95,8 +96,9 @@ export function CoastalWindSpeedChart({
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>风力变化趋势</CardTitle>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <CardTitle>风速变化趋势</CardTitle>
+        <Wind className="h-4 w-4 text-muted-foreground" />
       </CardHeader>
       <CardContent>
         <BaseChart
@@ -108,6 +110,7 @@ export function CoastalWindSpeedChart({
           yAxisDomain={[windSpeedRange.min, windSpeedRange.max]}
           yAxisTicks={windSpeedRange.ticks}
           fitColor="hsl(142.1 76.2% 50%)"
+          icon={Wind}
         />
       </CardContent>
     </Card>

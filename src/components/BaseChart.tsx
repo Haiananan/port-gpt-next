@@ -12,6 +12,7 @@ import {
 } from "recharts";
 import { useState, useCallback, useMemo } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
+import React from "react";
 
 export interface BaseChartProps {
   data: any[];
@@ -22,6 +23,7 @@ export interface BaseChartProps {
   name?: string;
   yAxisDomain?: [number, number];
   yAxisTicks?: number[];
+  icon?: React.ElementType;
 }
 
 // 计算多项式回归拟合
@@ -119,6 +121,7 @@ export function BaseChart({
   name,
   yAxisDomain,
   yAxisTicks,
+  icon,
 }: BaseChartProps) {
   const [showFit, setShowFit] = useState(true);
   const [showOriginal, setShowOriginal] = useState(true);
@@ -179,29 +182,35 @@ export function BaseChart({
 
   return (
     <div className="space-y-2">
-      <div className="flex justify-end items-center w-full space-x-4 px-6">
+      <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <Checkbox
-            id="showOriginal"
-            checked={showOriginal}
-            onCheckedChange={(checked) => setShowOriginal(checked as boolean)}
-          />
-          <label
-            htmlFor="showOriginal"
-            className="text-sm text-muted-foreground"
-          >
-            原始曲线
-          </label>
+          {icon &&
+            React.createElement(icon, {
+              className: "h-4 w-4 text-muted-foreground",
+            })}
+          <h3 className="text-lg font-medium">{name}</h3>
         </div>
-        <div className="flex items-center gap-2">
-          <Checkbox
-            id="showFit"
-            checked={showFit}
-            onCheckedChange={(checked) => setShowFit(checked as boolean)}
-          />
-          <label htmlFor="showFit" className="text-sm text-muted-foreground">
-            拟合曲线
-          </label>
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id="showOriginal"
+              checked={showOriginal}
+              onCheckedChange={(checked) => setShowOriginal(checked as boolean)}
+            />
+            <label htmlFor="showOriginal" className="text-sm font-medium">
+              原始曲线
+            </label>
+          </div>
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id="showFit"
+              checked={showFit}
+              onCheckedChange={(checked) => setShowFit(checked as boolean)}
+            />
+            <label htmlFor="showFit" className="text-sm font-medium">
+              拟合曲线
+            </label>
+          </div>
         </div>
       </div>
 

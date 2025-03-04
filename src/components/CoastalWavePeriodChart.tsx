@@ -8,6 +8,7 @@ import { useQuery } from "@tanstack/react-query";
 import { fetchWaveData } from "@/services/coastalApi";
 import { BaseChart } from "@/components/BaseChart";
 import { CoastalStationData } from "@/types/coastal";
+import { Timer } from "lucide-react";
 
 interface ProcessedWaveData {
   date: string;
@@ -91,8 +92,9 @@ export function CoastalWavePeriodChart({
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>浪周期变化</CardTitle>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <CardTitle>波周期变化趋势</CardTitle>
+        <Timer className="h-4 w-4 text-muted-foreground" />
       </CardHeader>
       <CardContent>
         <BaseChart
@@ -104,6 +106,7 @@ export function CoastalWavePeriodChart({
           yAxisDomain={[wavePeriodRange.min, wavePeriodRange.max]}
           yAxisTicks={wavePeriodRange.ticks}
           fitColor="hsl(280, 100%, 65%)"
+          icon={Timer}
         />
       </CardContent>
     </Card>
