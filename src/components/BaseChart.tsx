@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Line,
   LineChart,
@@ -26,9 +28,14 @@ export interface BaseChartProps {
 
 // 计算多项式回归拟合
 function polynomialRegression(data: any[], field: string, degree: number = 20) {
+  if (!data?.length) return [];
+
   // 将数据点转换为x和y数组，x为时间索引
   const x = data.map((_, i) => i);
-  const y = data.map((d) => d[field] || 0);
+  const y = data.map((d) => {
+    const value = d[field];
+    return value != null && !isNaN(value) ? value : 0;
+  });
 
   // 构建矩阵A
   const A: number[][] = [];
@@ -116,15 +123,13 @@ export function BaseChart({
   color,
   fitColor = "#8884d8",
   unit = "",
-  name,
+  name = "",
   icon,
 }: BaseChartProps) {
   const [showFit, setShowFit] = useState(true);
   const [showOriginal, setShowOriginal] = useState(true);
-  // 用于区域选择缩放的状态
   const [refAreaLeft, setRefAreaLeft] = useState<string | null>(null);
   const [refAreaRight, setRefAreaRight] = useState<string | null>(null);
-  // 用于记录当前的缩放范围
   const [zoomDomain, setZoomDomain] = useState<{
     x?: [string, string];
     y?: [number, number];
@@ -132,10 +137,17 @@ export function BaseChart({
 
   // 计算 Y 轴范围
   const yAxisConfig = useMemo(() => {
-    if (!data.length) return { domain: [0, 0], ticks: [] };
+    if (!data?.length) return { domain: [0, 0], ticks: [] };
+
     const values = data
-      .map((d) => d[dataKey])
-      .filter((v): v is number => v != null && !isNaN(v));
+      .map((d) => {
+        const value = d[dataKey];
+        return value != null && !isNaN(value) ? value : null;
+      })
+      .filter((v): v is number => v != null);
+
+    if (!values.length) return { domain: [0, 0], ticks: [] };
+
     const minValue = Math.min(...values);
     const maxValue = Math.max(...values);
     const range = maxValue - minValue;
@@ -155,14 +167,14 @@ export function BaseChart({
 
   // 处理鼠标事件
   const handleMouseDown = useCallback((e: any) => {
-    if (e && e.activeLabel) {
+    if (e?.activeLabel) {
       setRefAreaLeft(e.activeLabel);
     }
   }, []);
 
   const handleMouseMove = useCallback(
     (e: any) => {
-      if (refAreaLeft && e && e.activeLabel) {
+      if (refAreaLeft && e?.activeLabel) {
         setRefAreaRight(e.activeLabel);
       }
     },
@@ -175,23 +187,32 @@ export function BaseChart({
       const selectedData = data.filter(
         (entry) => entry.date >= left && entry.date <= right
       );
-      const values = selectedData.map((d) => d[dataKey] as number);
-      const minValue = Math.min(...values);
-      const maxValue = Math.max(...values);
-      const padding = (maxValue - minValue) * 0.05;
 
-      setZoomDomain({
-        x: [left, right],
-        y: [minValue - padding, maxValue + padding],
-      });
+      const values = selectedData
+        .map((d) => {
+          const value = d[dataKey];
+          return value != null && !isNaN(value) ? value : null;
+        })
+        .filter((v): v is number => v != null);
+
+      if (values.length) {
+        const minValue = Math.min(...values);
+        const maxValue = Math.max(...values);
+        const padding = (maxValue - minValue) * 0.05;
+
+        setZoomDomain({
+          x: [left, right],
+          y: [minValue - padding, maxValue + padding],
+        });
+      }
     }
     setRefAreaLeft(null);
     setRefAreaRight(null);
   }, [refAreaLeft, refAreaRight, data, dataKey]);
 
-  const handleResetZoom = () => {
+  const handleResetZoom = useCallback(() => {
     setZoomDomain({});
-  };
+  }, []);
 
   // 计算拟合数据
   const fittedData = useMemo(() => {
@@ -212,21 +233,24 @@ export function BaseChart({
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
             <Checkbox
-              id="showOriginal"
+              id={`showOriginal-${name}`}
               checked={showOriginal}
               onCheckedChange={(checked) => setShowOriginal(checked as boolean)}
             />
-            <label htmlFor="showOriginal" className="text-sm font-medium">
+            <label
+              htmlFor={`showOriginal-${name}`}
+              className="text-sm font-medium"
+            >
               原始曲线
             </label>
           </div>
           <div className="flex items-center gap-2">
             <Checkbox
-              id="showFit"
+              id={`showFit-${name}`}
               checked={showFit}
               onCheckedChange={(checked) => setShowFit(checked as boolean)}
             />
-            <label htmlFor="showFit" className="text-sm font-medium">
+            <label htmlFor={`showFit-${name}`} className="text-sm font-medium">
               拟合曲线
             </label>
           </div>
@@ -264,7 +288,7 @@ export function BaseChart({
             />
             <Tooltip
               content={({ active, payload }) => {
-                if (active && payload && payload.length) {
+                if (active && payload?.length) {
                   return (
                     <div className="rounded-lg border bg-background p-2 shadow-sm">
                       <div className="grid gap-2">
