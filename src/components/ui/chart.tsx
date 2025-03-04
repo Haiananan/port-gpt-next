@@ -2,8 +2,6 @@
 
 import * as React from "react";
 import * as RechartsPrimitive from "recharts";
-import { TooltipProps } from "recharts";
-import { ResponsiveContainer, Tooltip, TooltipContentProps } from "recharts";
 
 import { cn } from "@/lib/utils";
 

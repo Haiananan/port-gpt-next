@@ -214,14 +214,14 @@ export function CoastalWindChart({
               ))}
             </RadarChart>
           </ResponsiveContainer>
-          <div className="flex flex-wrap justify-center gap-4 mt-4">
+          <div className="flex flex-wrap justify-center gap-2 mt-2 px-2 text-xs">
             {WIND_LEVELS.map((level) => (
-              <div key={level.name} className="flex items-center gap-2">
+              <div key={level.name} className="flex items-center gap-1">
                 <div
-                  className="w-3 h-3 rounded-full"
+                  className="w-2 h-2 rounded-full"
                   style={{ backgroundColor: level.color }}
                 />
-                <span className="text-sm">
+                <span>
                   {level.name} ({level.range})
                 </span>
               </div>

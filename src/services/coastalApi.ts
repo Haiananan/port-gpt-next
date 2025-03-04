@@ -92,7 +92,7 @@ export async function fetchWaveData(
     station,
     startDate,
     endDate,
-    fields: "date,windWaveHeight,windWavePeriod,surgeHeight,surgePeriod",
+    fields: "date,windWaveHeight,windWavePeriod",
   });
 
   const response = await fetch(`/api/chartData?${params.toString()}`);
@@ -100,4 +100,60 @@ export async function fetchWaveData(
     throw new Error("获取风浪数据失败");
   }
   return response.json();
+}
+
+export interface StatsResponse {
+  temperature: {
+    max: number;
+    min: number;
+    avg: number;
+    trend: number;
+  };
+  seaTemperature: {
+    max: number;
+    min: number;
+    avg: number;
+    trend: number;
+  };
+  pressure: {
+    max: number;
+    min: number;
+    avg: number;
+    trend: number;
+  };
+  windSpeed: {
+    max: number;
+    min: number;
+    avg: number;
+    trend: number;
+  };
+  waveHeight: {
+    max: number;
+    min: number;
+    avg: number;
+    trend: number;
+  };
+  wavePeriod: {
+    max: number;
+    min: number;
+    avg: number;
+    trend: number;
+  };
+}
+
+export async function fetchStatsData(
+  station: string,
+  startDate: string,
+  endDate: string
+): Promise<StatsResponse> {
+  const response = await fetch(
+    `/api/stats?station=${station}&startDate=${startDate}&endDate=${endDate}`
+  );
+
+  if (!response.ok) {
+    throw new Error("获取统计数据失败");
+  }
+
+  const data = await response.json();
+  return data;
 }

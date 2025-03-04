@@ -234,9 +234,9 @@ export function CoastalTemperatureChart({
   }
 
   return (
-    <div className="space-y-4">
+    <>
       <AirTemperatureChart data={chartData} />
       <SeaTemperatureChart data={chartData} />
-    </div>
+    </>
   );
 }

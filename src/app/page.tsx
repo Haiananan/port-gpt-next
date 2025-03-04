@@ -10,9 +10,10 @@ import { CoastalDataTable } from "@/components/CoastalDataTable";
 import { CoastalTemperatureChart } from "@/components/CoastalTemperatureChart";
 import { CoastalWindChart } from "@/components/CoastalWindChart";
 import { CoastalPressureChart } from "@/components/CoastalPressureChart";
-
 import { CoastalWavePeriodChart } from "@/components/CoastalWavePeriodChart";
 import { CoastalWaveHeightChart } from "@/components/CoastalWaveHeightChart";
+import { CoastalStats } from "@/components/CoastalStats";
+
 export default function DataQueryComponent() {
   const [station, setStation] = useState<string>("XCS");
   const [startDate, setStartDate] = useState<Date | undefined>(
@@ -38,10 +39,9 @@ export default function DataQueryComponent() {
         endDate?.toISOString() || null,
         page
       ),
-    enabled: Boolean(startDate && endDate && station), // 只在有完整查询条件时才发起请求
+    enabled: Boolean(startDate && endDate && station),
   });
 
-  // 重置所有条件
   const handleReset = () => {
     setStation("");
     setStartDate(undefined);
@@ -49,7 +49,6 @@ export default function DataQueryComponent() {
     setPage(1);
   };
 
-  // 处理日期范围变化
   const handleDateRangeChange = (
     start: Date | undefined,
     end: Date | undefined
@@ -58,7 +57,6 @@ export default function DataQueryComponent() {
     setEndDate(end);
   };
 
-  // 当查询条件改变时重置分页
   useEffect(() => {
     setPage(1);
   }, [station, startDate, endDate]);
@@ -80,28 +78,37 @@ export default function DataQueryComponent() {
         </Alert>
       ) : (
         <>
-          <div className="grid gap-4 md:grid-cols-2">
+          <CoastalStats
+            station={station}
+            startDate={startDate}
+            endDate={endDate}
+          />
+          <div className="grid grid-cols-2 gap-4">
             <CoastalTemperatureChart
               station={station}
               startDate={startDate}
               endDate={endDate}
             />
-            <CoastalWindChart
-              station={station}
-              startDate={startDate}
-              endDate={endDate}
-            />
+
             <CoastalPressureChart
               station={station}
               startDate={startDate}
               endDate={endDate}
             />
+
             <CoastalWaveHeightChart
               station={station}
               startDate={startDate}
               endDate={endDate}
             />
+
             <CoastalWavePeriodChart
+              station={station}
+              startDate={startDate}
+              endDate={endDate}
+            />
+
+            <CoastalWindChart
               station={station}
               startDate={startDate}
               endDate={endDate}
