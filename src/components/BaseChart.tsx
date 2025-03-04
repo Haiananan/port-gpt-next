@@ -182,6 +182,75 @@ const getStats = (
   };
 };
 
+// 计算预测趋势线
+function calculateTrendLine(
+  data: any[],
+  field: string,
+  predictionDays: number = 7
+) {
+  if (!data?.length) return [];
+
+  // 将数据转换为坐标点，使用时间戳作为 x 值
+  const points = data.map((d) => ({
+    x: new Date(d.date).getTime(),
+    y: d[field] || 0,
+  }));
+
+  // 标准化 x 值以避免数值过大
+  const minX = Math.min(...points.map((p) => p.x));
+  const normalizedPoints = points.map((p) => ({
+    x: (p.x - minX) / (24 * 60 * 60 * 1000), // 转换为天数
+    y: p.y,
+  }));
+
+  // 使用最小二乘法计算趋势线
+  let sumX = 0,
+    sumY = 0,
+    sumXY = 0,
+    sumX2 = 0;
+  const n = normalizedPoints.length;
+
+  normalizedPoints.forEach((point) => {
+    sumX += point.x;
+    sumY += point.y;
+    sumXY += point.x * point.y;
+    sumX2 += point.x * point.x;
+  });
+
+  // 计算斜率和截距
+  const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+  const intercept = (sumY - slope * sumX) / n;
+
+  // 生成趋势线数据，包括预测部分
+  const trendData = [...data];
+  const lastDate = new Date(data[data.length - 1].date);
+  const lastX = (new Date(lastDate).getTime() - minX) / (24 * 60 * 60 * 1000);
+
+  // 添加预测点
+  for (let i = 1; i <= predictionDays; i++) {
+    const nextDate = new Date(lastDate);
+    nextDate.setDate(lastDate.getDate() + i);
+    const dateStr = nextDate.toISOString().split("T")[0];
+    const x = lastX + i;
+    const predictedValue = slope * x + intercept;
+
+    trendData.push({
+      date: dateStr,
+      [`${field}Trend`]: predictedValue,
+      isPrediction: true,
+    });
+  }
+
+  // 为所有点添加趋势线值
+  return trendData.map((d) => {
+    const x = (new Date(d.date).getTime() - minX) / (24 * 60 * 60 * 1000);
+    return {
+      ...d,
+      [`${field}Trend`]: slope * x + intercept,
+    };
+  });
+}
+
 // 基础图表组件
 export function BaseChart({
   data,
@@ -200,6 +269,7 @@ export function BaseChart({
   const [showOriginal, setShowOriginal] = useState(true);
   const [showStats, setShowStats] = useState(true);
   const [showAnomalies, setShowAnomalies] = useState(true);
+  const [showTrend, setShowTrend] = useState(false);
   const [refAreaLeft, setRefAreaLeft] = useState<string | null>(null);
   const [refAreaRight, setRefAreaRight] = useState<string | null>(null);
   const [zoomDomain, setZoomDomain] = useState<{
@@ -297,6 +367,12 @@ export function BaseChart({
     if (!showFit) return data;
     return polynomialRegression(data, dataKey, 20);
   }, [data, dataKey, showFit]);
+
+  // 计算趋势线数据
+  const trendData = useMemo(() => {
+    if (!showTrend) return fittedData;
+    return calculateTrendLine(fittedData, dataKey);
+  }, [fittedData, dataKey, showTrend]);
 
   // 导出图表为图片
   const handleExportChart = useCallback(() => {
@@ -425,6 +501,20 @@ export function BaseChart({
                 />
                 <span className="text-sm">统计信息</span>
               </DropdownMenuItem>
+              <DropdownMenuItem
+                className="flex items-center gap-2 cursor-pointer"
+                onSelect={(e) => {
+                  e.preventDefault();
+                  setShowTrend(!showTrend);
+                }}
+              >
+                <Checkbox
+                  id={`showTrend-${name}`}
+                  checked={showTrend}
+                  onCheckedChange={() => setShowTrend(!showTrend)}
+                />
+                <span className="text-sm">预测趋势</span>
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
           <Button
@@ -547,7 +637,7 @@ export function BaseChart({
       <div className="h-[300px]" id={`chart-${name}`}>
         <ResponsiveContainer width="100%" height="100%">
           <LineChart
-            data={fittedData}
+            data={trendData}
             onMouseDown={handleMouseDown}
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
@@ -661,6 +751,17 @@ export function BaseChart({
                 strokeWidth={2}
                 dot={false}
                 strokeDasharray="3 3"
+              />
+            )}
+            {showTrend && (
+              <Line
+                name="预测趋势"
+                type="monotone"
+                dataKey={`${dataKey}Trend`}
+                stroke="#10b981"
+                strokeWidth={2}
+                dot={false}
+                strokeDasharray="5 5"
               />
             )}
             {refAreaLeft && refAreaRight && (
