@@ -11,7 +11,7 @@ export const fetchCoastalData = async (
   if (startDate) params.append("startDate", startDate);
   if (endDate) params.append("endDate", endDate);
   params.append("page", page.toString());
-  params.append("pageSize", "100");
+  params.append("pageSize", "200");
 
   const response = await fetch(`/api/queryData?${params.toString()}`);
   if (!response.ok) {
