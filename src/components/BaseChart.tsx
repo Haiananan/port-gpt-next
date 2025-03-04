@@ -16,7 +16,7 @@ import { useState, useCallback, useMemo } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { Download, RotateCcw } from "lucide-react";
+import { Download, RotateCcw, BarChart3, Eye } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -179,6 +179,7 @@ export function BaseChart({
 
   const [showFit, setShowFit] = useState(true);
   const [showOriginal, setShowOriginal] = useState(true);
+  const [showStats, setShowStats] = useState(true);
   const [refAreaLeft, setRefAreaLeft] = useState<string | null>(null);
   const [refAreaRight, setRefAreaRight] = useState<string | null>(null);
   const [zoomDomain, setZoomDomain] = useState<{
@@ -340,29 +341,58 @@ export function BaseChart({
           <h3 className="text-lg font-medium">{name}</h3>
         </div>
         <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <Checkbox
-              id={`showOriginal-${name}`}
-              checked={showOriginal}
-              onCheckedChange={(checked) => setShowOriginal(checked as boolean)}
-            />
-            <label
-              htmlFor={`showOriginal-${name}`}
-              className="text-sm font-medium"
-            >
-              原始曲线
-            </label>
-          </div>
-          <div className="flex items-center gap-2">
-            <Checkbox
-              id={`showFit-${name}`}
-              checked={showFit}
-              onCheckedChange={(checked) => setShowFit(checked as boolean)}
-            />
-            <label htmlFor={`showFit-${name}`} className="text-sm font-medium">
-              拟合曲线
-            </label>
-          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm">
+                <Eye className="h-4 w-4 mr-2" />
+                显示选项
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem
+                className="flex items-center gap-2 cursor-pointer"
+                onSelect={(e) => {
+                  e.preventDefault();
+                  setShowOriginal(!showOriginal);
+                }}
+              >
+                <Checkbox
+                  id={`showOriginal-${name}`}
+                  checked={showOriginal}
+                  onCheckedChange={() => setShowOriginal(!showOriginal)}
+                />
+                <span className="text-sm">原始曲线</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="flex items-center gap-2 cursor-pointer"
+                onSelect={(e) => {
+                  e.preventDefault();
+                  setShowFit(!showFit);
+                }}
+              >
+                <Checkbox
+                  id={`showFit-${name}`}
+                  checked={showFit}
+                  onCheckedChange={() => setShowFit(!showFit)}
+                />
+                <span className="text-sm">拟合曲线</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="flex items-center gap-2 cursor-pointer"
+                onSelect={(e) => {
+                  e.preventDefault();
+                  setShowStats(!showStats);
+                }}
+              >
+                <Checkbox
+                  id={`showStats-${name}`}
+                  checked={showStats}
+                  onCheckedChange={() => setShowStats(!showStats)}
+                />
+                <span className="text-sm">统计信息</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <Button
             variant="outline"
             size="sm"
@@ -399,7 +429,7 @@ export function BaseChart({
         </div>
       </div>
 
-      {stats && (
+      {stats && showStats && (
         <div className="grid grid-cols-4 gap-4 mb-4 p-4 bg-muted rounded-lg">
           <div className="flex flex-col">
             <span className="text-sm text-muted-foreground">最大值</span>
