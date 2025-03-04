@@ -8,6 +8,9 @@ import {
   RadarChart,
   ResponsiveContainer,
   Tooltip,
+  PieChart,
+  Pie,
+  Cell,
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { format } from "date-fns";
@@ -164,6 +167,33 @@ export function CoastalWindChart({
     setChartScale(Math.min(Math.max(0.5, chartScale + delta), 2));
   };
 
+  // 计算风力等级总占比
+  const windLevelStats = React.useMemo(() => {
+    if (!chartData.length) return [];
+    return WIND_LEVELS.map((level) => {
+      const total = chartData.reduce(
+        (sum, data) => sum + (data[level.name] as number),
+        0
+      );
+      return {
+        name: level.name,
+        value: total,
+        color: level.color,
+        range: level.range,
+      };
+    });
+  }, [chartData]);
+
+  // 计算风向总占比
+  const windDirectionStats = React.useMemo(() => {
+    return chartData.map((data) => ({
+      name: data.direction,
+      value: data.total,
+      color:
+        WIND_LEVELS.find((l) => l.name === data.dominantSpeed)?.color || "#888",
+    }));
+  }, [chartData]);
+
   if (isLoading) {
     return (
       <Card>
@@ -232,132 +262,340 @@ export function CoastalWindChart({
         </div>
       </CardHeader>
       <CardContent>
-        <div
-          className="h-[400px]"
-          onWheel={handleWheel}
-          style={{ cursor: "zoom-in" }}
-        >
-          <ResponsiveContainer width="100%" height="100%">
-            <RadarChart
-              cx="50%"
-              cy="50%"
-              outerRadius={`${80 * chartScale}%`}
-              data={chartData}
-              margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
-            >
-              <PolarGrid gridType="circle" />
-              <PolarAngleAxis
-                dataKey="direction"
-                tick={{ fill: "hsl(var(--foreground))" }}
-              />
-              <PolarRadiusAxis
-                angle={90}
-                domain={[0, "auto"]}
-                tick={{ fill: "hsl(var(--foreground))" }}
-                tickFormatter={(value) =>
-                  showPercentage
-                    ? `${(
-                        (value /
-                          chartData.reduce((sum, d) => sum + d.total, 0)) *
-                        100
-                      ).toFixed(1)}%`
-                    : value.toString()
-                }
-              />
-              <Tooltip
-                content={({ active, payload }) => {
-                  if (active && payload && payload.length) {
-                    const data = payload[0].payload as WindDirectionData;
-                    return (
-                      <div className="rounded-lg border bg-background p-2 shadow-sm">
-                        <div className="grid gap-2">
-                          <div className="font-bold flex items-center justify-between">
-                            <span>{data.direction}</span>
-                            <span className="text-sm text-muted-foreground">
-                              {showPercentage
-                                ? `${data.percentage.toFixed(1)}%`
-                                : `${data.total}次`}
-                            </span>
-                          </div>
-                          {WIND_LEVELS.map((level) => (
-                            <div
-                              key={level.name}
-                              className="flex items-center justify-between gap-2"
-                              style={{
-                                opacity:
-                                  selectedLevel && selectedLevel !== level.name
-                                    ? 0.5
-                                    : 1,
-                              }}
-                            >
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+          {/* 左侧风力等级饼图 */}
+          <div className="lg:col-span-3 flex">
+            <div className="rounded-lg border p-4 flex-1 flex flex-col">
+              <h3 className="font-medium mb-2">风力等级分布</h3>
+              <div className="flex-1 min-h-[300px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={windLevelStats}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={50}
+                      outerRadius={90}
+                      paddingAngle={2}
+                      dataKey="value"
+                    >
+                      {windLevelStats.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      content={({ active, payload }) => {
+                        if (active && payload && payload.length) {
+                          const data = payload[0].payload;
+                          const total = windLevelStats.reduce(
+                            (sum, item) => sum + item.value,
+                            0
+                          );
+                          const percentage = (
+                            (data.value / total) *
+                            100
+                          ).toFixed(1);
+                          return (
+                            <div className="rounded-lg border bg-background p-2 shadow-sm">
                               <div className="flex items-center gap-2">
                                 <div
                                   className="w-3 h-3 rounded-full"
-                                  style={{ backgroundColor: level.color }}
+                                  style={{ backgroundColor: data.color }}
                                 />
-                                <span>{level.name}</span>
+                                <span className="font-medium">{data.name}</span>
+                                <span className="text-sm text-muted-foreground">
+                                  ({data.range})
+                                </span>
                               </div>
-                              <span>
-                                {showPercentage
-                                  ? `${(
-                                      ((data[level.name] as number) /
-                                        data.total) *
-                                      100
-                                    ).toFixed(1)}%`
-                                  : data[level.name]}
-                              </span>
+                              <div className="mt-1 text-sm text-muted-foreground">
+                                {data.value}次 ({percentage}%)
+                              </div>
                             </div>
-                          ))}
-                        </div>
-                      </div>
-                    );
-                  }
-                  return null;
-                }}
-              />
-              {WIND_LEVELS.map((level) => (
-                <Radar
-                  key={level.name}
-                  name={level.name}
-                  dataKey={level.name}
-                  stroke={level.color}
-                  fill={level.color}
-                  fillOpacity={
-                    selectedLevel === level.name
-                      ? 0.8
-                      : selectedLevel
-                      ? 0.2
-                      : 0.6
-                  }
-                  isAnimationActive={false}
-                />
-              ))}
-            </RadarChart>
-          </ResponsiveContainer>
-          <div className="flex flex-wrap justify-center gap-2 mt-2 px-4 text-sm max-w-full overflow-hidden">
-            {WIND_LEVELS.map((level) => (
-              <div
-                key={level.name}
-                className="flex items-center gap-1.5 cursor-pointer transition-opacity duration-200 whitespace-nowrap"
-                style={{
-                  opacity:
-                    selectedLevel && selectedLevel !== level.name ? 0.5 : 1,
-                }}
-                onClick={() =>
-                  setSelectedLevel(
-                    selectedLevel === level.name ? null : level.name
-                  )
-                }
-              >
-                <div
-                  className="w-2.5 h-2.5 rounded-full flex-shrink-0"
-                  style={{ backgroundColor: level.color }}
-                />
-                <span className="text-xs">
-                  {level.name} ({level.range})
-                </span>
+                          );
+                        }
+                        return null;
+                      }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
               </div>
-            ))}
+              <div className="mt-4 space-y-2">
+                {windLevelStats.map((level) => {
+                  const total = windLevelStats.reduce(
+                    (sum, item) => sum + item.value,
+                    0
+                  );
+                  const percentage = ((level.value / total) * 100).toFixed(1);
+                  return (
+                    <div
+                      key={level.name}
+                      className="flex items-center justify-between text-sm"
+                    >
+                      <div className="flex items-center gap-2">
+                        <div
+                          className="w-2.5 h-2.5 rounded-full"
+                          style={{ backgroundColor: level.color }}
+                        />
+                        <span>{level.name}</span>
+                      </div>
+                      <span className="text-muted-foreground">
+                        {percentage}%
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* 中间风向玫瑰图 */}
+          <div className="lg:col-span-6">
+            <div className="rounded-lg border p-4">
+              <div className="relative">
+                <div className="absolute top-0 right-0 flex items-center gap-2 z-10">
+                  <button
+                    onClick={() =>
+                      setChartScale(Math.max(0.5, chartScale - 0.1))
+                    }
+                    className="w-8 h-8 rounded-lg border bg-background hover:bg-accent flex items-center justify-center"
+                    title="缩小"
+                  >
+                    <span className="text-lg">-</span>
+                  </button>
+                  <span className="text-sm text-muted-foreground min-w-[3rem] text-center">
+                    {(chartScale * 100).toFixed(0)}%
+                  </span>
+                  <button
+                    onClick={() => setChartScale(Math.min(2, chartScale + 0.1))}
+                    className="w-8 h-8 rounded-lg border bg-background hover:bg-accent flex items-center justify-center"
+                    title="放大"
+                  >
+                    <span className="text-lg">+</span>
+                  </button>
+                </div>
+                <div
+                  className="h-[500px]"
+                  onWheel={handleWheel}
+                  style={{ cursor: "zoom-in" }}
+                >
+                  <ResponsiveContainer width="100%" height="100%">
+                    <RadarChart
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={`${80 * chartScale}%`}
+                      data={chartData}
+                      margin={{ top: 40, right: 20, bottom: 20, left: 20 }}
+                    >
+                      <PolarGrid gridType="circle" />
+                      <PolarAngleAxis
+                        dataKey="direction"
+                        tick={{ fill: "hsl(var(--foreground))" }}
+                      />
+                      <PolarRadiusAxis
+                        angle={90}
+                        domain={[0, "auto"]}
+                        tick={{ fill: "hsl(var(--foreground))" }}
+                        tickFormatter={(value) =>
+                          showPercentage
+                            ? `${(
+                                (value /
+                                  chartData.reduce(
+                                    (sum, d) => sum + d.total,
+                                    0
+                                  )) *
+                                100
+                              ).toFixed(1)}%`
+                            : value.toString()
+                        }
+                      />
+                      <Tooltip
+                        content={({ active, payload }) => {
+                          if (active && payload && payload.length) {
+                            const data = payload[0]
+                              .payload as WindDirectionData;
+                            return (
+                              <div className="rounded-lg border bg-background p-2 shadow-sm">
+                                <div className="grid gap-2">
+                                  <div className="font-bold flex items-center justify-between">
+                                    <span>{data.direction}</span>
+                                    <span className="text-sm text-muted-foreground">
+                                      {showPercentage
+                                        ? `${data.percentage.toFixed(1)}%`
+                                        : `${data.total}次`}
+                                    </span>
+                                  </div>
+                                  {WIND_LEVELS.map((level) => (
+                                    <div
+                                      key={level.name}
+                                      className="flex items-center justify-between gap-2"
+                                      style={{
+                                        opacity:
+                                          selectedLevel &&
+                                          selectedLevel !== level.name
+                                            ? 0.5
+                                            : 1,
+                                      }}
+                                    >
+                                      <div className="flex items-center gap-2">
+                                        <div
+                                          className="w-3 h-3 rounded-full"
+                                          style={{
+                                            backgroundColor: level.color,
+                                          }}
+                                        />
+                                        <span>{level.name}</span>
+                                      </div>
+                                      <span>
+                                        {showPercentage
+                                          ? `${(
+                                              ((data[level.name] as number) /
+                                                data.total) *
+                                              100
+                                            ).toFixed(1)}%`
+                                          : data[level.name]}
+                                      </span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            );
+                          }
+                          return null;
+                        }}
+                      />
+                      {WIND_LEVELS.map((level) => (
+                        <Radar
+                          key={level.name}
+                          name={level.name}
+                          dataKey={level.name}
+                          stroke={level.color}
+                          fill={level.color}
+                          fillOpacity={
+                            selectedLevel === level.name
+                              ? 0.8
+                              : selectedLevel
+                              ? 0.2
+                              : 0.6
+                          }
+                          isAnimationActive={false}
+                        />
+                      ))}
+                    </RadarChart>
+                  </ResponsiveContainer>
+                </div>
+                <div className="flex flex-wrap justify-center gap-2 mt-4 px-4 text-sm max-w-full overflow-hidden">
+                  {WIND_LEVELS.map((level) => (
+                    <div
+                      key={level.name}
+                      className="flex items-center gap-1.5 cursor-pointer transition-opacity duration-200 whitespace-nowrap"
+                      style={{
+                        opacity:
+                          selectedLevel && selectedLevel !== level.name
+                            ? 0.5
+                            : 1,
+                      }}
+                      onClick={() =>
+                        setSelectedLevel(
+                          selectedLevel === level.name ? null : level.name
+                        )
+                      }
+                    >
+                      <div
+                        className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                        style={{ backgroundColor: level.color }}
+                      />
+                      <span className="text-xs">
+                        {level.name} ({level.range})
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* 右侧风向分布饼图 */}
+          <div className="lg:col-span-3 flex">
+            <div className="rounded-lg border p-4 flex-1 flex flex-col">
+              <h3 className="font-medium mb-2">风向分布</h3>
+              <div className="flex-1 min-h-[300px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={windDirectionStats}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={50}
+                      outerRadius={90}
+                      paddingAngle={2}
+                      dataKey="value"
+                    >
+                      {windDirectionStats.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      content={({ active, payload }) => {
+                        if (active && payload && payload.length) {
+                          const data = payload[0].payload;
+                          const total = windDirectionStats.reduce(
+                            (sum, item) => sum + item.value,
+                            0
+                          );
+                          const percentage = (
+                            (data.value / total) *
+                            100
+                          ).toFixed(1);
+                          return (
+                            <div className="rounded-lg border bg-background p-2 shadow-sm">
+                              <div className="flex items-center gap-2">
+                                <div
+                                  className="w-3 h-3 rounded-full"
+                                  style={{ backgroundColor: data.color }}
+                                />
+                                <span className="font-medium">{data.name}</span>
+                              </div>
+                              <div className="mt-1 text-sm text-muted-foreground">
+                                {data.value}次 ({percentage}%)
+                              </div>
+                            </div>
+                          );
+                        }
+                        return null;
+                      }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="mt-4 grid grid-cols-2 gap-2">
+                {windDirectionStats.map((direction) => {
+                  const total = windDirectionStats.reduce(
+                    (sum, item) => sum + item.value,
+                    0
+                  );
+                  const percentage = ((direction.value / total) * 100).toFixed(
+                    1
+                  );
+                  return (
+                    <div
+                      key={direction.name}
+                      className="flex items-center justify-between text-sm"
+                    >
+                      <div className="flex items-center gap-2">
+                        <div
+                          className="w-2.5 h-2.5 rounded-full"
+                          style={{ backgroundColor: direction.color }}
+                        />
+                        <span>{direction.name}</span>
+                      </div>
+                      <span className="text-muted-foreground">
+                        {percentage}%
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         </div>
       </CardContent>
