@@ -12,49 +12,16 @@ import {
 } from "recharts";
 import { useState, useCallback, useMemo } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 
 export interface BaseChartProps {
   data: any[];
   dataKey: string;
   color: string;
-  showAvg6h: boolean;
-  showAvg12h: boolean;
-  onAvg6hChange: (checked: boolean) => void;
-  onAvg12hChange: (checked: boolean) => void;
-  avg6hColor: string;
-  avg12hColor: string;
   fitColor?: string;
   unit?: string;
   name?: string;
   yAxisDomain?: [number, number];
   yAxisTicks?: number[];
-}
-
-// 计算移动平均值
-export function calculateMovingAverage(
-  data: any[],
-  hours: number,
-  field: string
-) {
-  const result = [];
-  const pointsPerWindow = hours;
-
-  for (let i = 0; i < data.length; i++) {
-    const startIdx = Math.max(0, i - pointsPerWindow + 1);
-    const window = data.slice(startIdx, i + 1);
-    const sum = window.reduce((acc, curr) => acc + (curr[field] || 0), 0);
-    const avg = sum / window.length;
-
-    result.push({
-      ...data[i],
-      [`${field}Avg${hours}h`]: avg,
-    });
-  }
-
-  return result;
 }
 
 // 计算多项式回归拟合
@@ -147,12 +114,6 @@ export function BaseChart({
   data,
   dataKey,
   color,
-  showAvg6h,
-  showAvg12h,
-  onAvg6hChange,
-  onAvg12hChange,
-  avg6hColor,
-  avg12hColor,
   fitColor = "#8884d8",
   unit = "",
   name,
@@ -209,88 +170,24 @@ export function BaseChart({
     setZoomDomain({});
   };
 
-  // 计算6小时平均值
-  const avg6hData = useMemo(() => {
-    if (!showAvg6h) return data;
-    const result = [];
-    const hours = 6;
-    const pointsPerWindow = hours;
-
-    for (let i = 0; i < data.length; i++) {
-      const startIdx = Math.max(0, i - pointsPerWindow + 1);
-      const window = data.slice(startIdx, i + 1);
-      const sum = window.reduce((acc, curr) => acc + (curr[dataKey] || 0), 0);
-      const avg = sum / window.length;
-
-      result.push({
-        ...data[i],
-        [`${dataKey}Avg6h`]: avg,
-      });
-    }
-    return result;
-  }, [data, dataKey, showAvg6h]);
-
-  // 计算12小时平均值
-  const avg12hData = useMemo(() => {
-    if (!showAvg12h) return avg6hData;
-    const result = [];
-    const hours = 12;
-    const pointsPerWindow = hours;
-
-    for (let i = 0; i < data.length; i++) {
-      const startIdx = Math.max(0, i - pointsPerWindow + 1);
-      const window = data.slice(startIdx, i + 1);
-      const sum = window.reduce((acc, curr) => acc + (curr[dataKey] || 0), 0);
-      const avg = sum / window.length;
-
-      result.push({
-        ...avg6hData[i],
-        [`${dataKey}Avg12h`]: avg,
-      });
-    }
-    return result;
-  }, [avg6hData, data, dataKey, showAvg12h]);
-
   // 计算拟合数据
   const fittedData = useMemo(() => {
-    if (!showFit) return avg12hData;
-    return polynomialRegression(avg12hData, dataKey, 20);
-  }, [avg12hData, dataKey, showFit]);
+    if (!showFit) return data;
+    return polynomialRegression(data, dataKey, 20);
+  }, [data, dataKey, showFit]);
 
   return (
     <div className="space-y-2">
-      <div className="flex justify-center items-center  w-full space-x-4">
-        <div className="flex items-center gap-2">
-          <Checkbox
-            id="avg6h"
-            checked={showAvg6h}
-            onCheckedChange={(checked) => onAvg6hChange(checked as boolean)}
-          />
-          <Label htmlFor="avg6h" className="text-sm text-muted-foreground">
-            6小时平均
-          </Label>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <Checkbox
-            id="avg12h"
-            checked={showAvg12h}
-            onCheckedChange={(checked) => onAvg12hChange(checked as boolean)}
-          />
-          <Label htmlFor="avg12h" className="text-sm text-muted-foreground">
-            12小时平均
-          </Label>
-        </div>
-
-        <div className="flex items-center gap-2">
+      <div className="flex justify-end items-center w-full space-x-4 pr-8">
+        <div className="flex items-center  gap-2">
           <Checkbox
             id="showFit"
             checked={showFit}
             onCheckedChange={(checked) => setShowFit(checked as boolean)}
           />
-          <Label htmlFor="showFit" className="text-sm text-muted-foreground">
+          <label htmlFor="showFit" className="text-sm text-muted-foreground">
             拟合曲线
-          </Label>
+          </label>
         </div>
       </div>
 
@@ -376,28 +273,6 @@ export function BaseChart({
                 strokeWidth={2}
                 dot={false}
                 strokeDasharray="3 3"
-              />
-            )}
-            {showAvg6h && (
-              <Line
-                name="6小时平均"
-                type="monotone"
-                dataKey={`${dataKey}Avg6h`}
-                stroke={avg6hColor}
-                strokeWidth={1.5}
-                dot={false}
-                strokeDasharray="10 5"
-              />
-            )}
-            {showAvg12h && (
-              <Line
-                name="12小时平均"
-                type="monotone"
-                dataKey={`${dataKey}Avg12h`}
-                stroke={avg12hColor}
-                strokeWidth={1.5}
-                dot={false}
-                strokeDasharray="15 5"
               />
             )}
             {refAreaLeft && refAreaRight && (
