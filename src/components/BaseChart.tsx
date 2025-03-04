@@ -11,6 +11,7 @@ import {
   Brush,
   CartesianGrid,
   Legend,
+  Scatter,
 } from "recharts";
 import { useState, useCallback, useMemo } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -152,6 +153,17 @@ const getStats = (
   const avg = values.reduce((a, b) => a + b, 0) / values.length;
   const current = values[values.length - 1];
 
+  // 计算标准差
+  const stdDev = Math.sqrt(
+    values.reduce((sum, val) => sum + Math.pow(val - avg, 2), 0) / values.length
+  );
+
+  // 检测异常值 (超过3个标准差)
+  const anomalies = filteredData.filter((d) => {
+    const value = d[key];
+    return value != null && !isNaN(value) && Math.abs(value - avg) > 3 * stdDev;
+  });
+
   return {
     max,
     min,
@@ -160,6 +172,13 @@ const getStats = (
     trend: current > values[0] ? "up" : "down",
     count: values.length,
     total: data.length,
+    stdDev,
+    anomalyCount: anomalies.length,
+    anomalies: anomalies.map((d) => ({
+      date: d.date,
+      value: d[key],
+      deviation: ((d[key] - avg) / stdDev).toFixed(2),
+    })),
   };
 };
 
@@ -180,6 +199,7 @@ export function BaseChart({
   const [showFit, setShowFit] = useState(true);
   const [showOriginal, setShowOriginal] = useState(true);
   const [showStats, setShowStats] = useState(true);
+  const [showAnomalies, setShowAnomalies] = useState(true);
   const [refAreaLeft, setRefAreaLeft] = useState<string | null>(null);
   const [refAreaRight, setRefAreaRight] = useState<string | null>(null);
   const [zoomDomain, setZoomDomain] = useState<{
@@ -367,6 +387,20 @@ export function BaseChart({
                 className="flex items-center gap-2 cursor-pointer"
                 onSelect={(e) => {
                   e.preventDefault();
+                  setShowAnomalies(!showAnomalies);
+                }}
+              >
+                <Checkbox
+                  id={`showAnomalies-${name}`}
+                  checked={showAnomalies}
+                  onCheckedChange={() => setShowAnomalies(!showAnomalies)}
+                />
+                <span className="text-sm">异常点</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="flex items-center gap-2 cursor-pointer"
+                onSelect={(e) => {
+                  e.preventDefault();
                   setShowFit(!showFit);
                 }}
               >
@@ -477,6 +511,36 @@ export function BaseChart({
               </span>
             </div>
           </div>
+          <div className="flex flex-col col-span-2">
+            <span className="text-sm text-muted-foreground">异常检测</span>
+            <div className="flex items-center gap-2">
+              <span className="text-lg font-bold text-orange-500">
+                {stats.anomalyCount}
+              </span>
+              <span className="text-sm text-muted-foreground">
+                个异常点 (超过3σ)
+              </span>
+              {stats.anomalyCount > 0 && (
+                <div className="text-xs text-muted-foreground mt-1">
+                  最近异常: {stats.anomalies[stats.anomalies.length - 1]?.date}(
+                  {stats.anomalies[stats.anomalies.length - 1]?.value.toFixed(
+                    1
+                  )}
+                  {unit},
+                  {stats.anomalies[stats.anomalies.length - 1]?.deviation}σ)
+                </div>
+              )}
+            </div>
+          </div>
+          <div className="flex flex-col col-span-2">
+            <span className="text-sm text-muted-foreground">标准差</span>
+            <div className="flex items-center gap-2">
+              <span className="text-lg font-bold">
+                {stats.stdDev.toFixed(2)}
+                {unit}
+              </span>
+            </div>
+          </div>
         </div>
       )}
 
@@ -545,6 +609,7 @@ export function BaseChart({
               }}
             />
             <Legend />
+
             {showOriginal && (
               <Line
                 name={name}
@@ -552,7 +617,39 @@ export function BaseChart({
                 dataKey={dataKey}
                 stroke={color}
                 strokeWidth={2}
-                dot={false}
+                dot={(props: any) => {
+                  const isAnomaly =
+                    showAnomalies &&
+                    stats?.anomalies?.some(
+                      (a) => a.date === props.payload.date
+                    );
+                  if (isAnomaly) {
+                    return (
+                      <circle
+                        cx={props.cx}
+                        cy={props.cy}
+                        r={3}
+                        fill="#ef4444"
+                        stroke="none"
+                      />
+                    );
+                  }
+                  return <circle cx={props.cx} cy={props.cy} r={0} />;
+                }}
+              />
+            )}
+            {showAnomalies && (
+              <Scatter
+                name="异常点"
+                data={stats?.anomalies || []}
+                fill="#ef4444"
+                line={false}
+                shape="circle"
+                dataKey="value"
+                xAxisId={0}
+                yAxisId={0}
+                legendType="circle"
+                r={4}
               />
             )}
             {showFit && (
