@@ -7,28 +7,38 @@ export function ScrollToTop() {
 
   // 控制按钮显示/隐藏的函数
   const toggleVisibility = () => {
-    if (window.scrollY > 300) {
-      setIsVisible(true);
-    } else {
-      setIsVisible(false);
+    if (typeof window !== "undefined") {
+      if (window.scrollY > 300) {
+        setIsVisible(true);
+      } else {
+        setIsVisible(false);
+      }
     }
   };
 
   // 滚动到顶部的函数
   const scrollToTop = () => {
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth",
-    });
+    if (typeof window !== "undefined") {
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth",
+      });
+    }
   };
 
   useEffect(() => {
-    window.addEventListener("scroll", toggleVisibility);
-
-    return () => {
-      window.removeEventListener("scroll", toggleVisibility);
-    };
+    if (typeof window !== "undefined") {
+      window.addEventListener("scroll", toggleVisibility);
+      return () => {
+        window.removeEventListener("scroll", toggleVisibility);
+      };
+    }
   }, []);
+
+  // 如果在服务器端，不渲染任何内容
+  if (typeof window === "undefined") {
+    return null;
+  }
 
   return (
     <>
