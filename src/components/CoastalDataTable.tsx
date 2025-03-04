@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { STATIONS } from "@/config/stations";
 import { CoastalStationData } from "@/types/coastal";
 import { Copy } from "lucide-react";
-import { Pagination } from "@/components/ui/pagination";
+import { CustomPagination } from "@/components/ui/custom-pagination";
 import { toast } from "sonner";
 
 interface CoastalDataTableProps {
@@ -55,11 +55,11 @@ export function CoastalDataTable({
   };
 
   return (
-    <Card>
-      <CardContent className="p-0">
-        <div className="overflow-x-auto">
+    <Card className="flex flex-col h-[90vh]">
+      <CardContent className="p-0 flex flex-col h-full">
+        <div className="flex-1 overflow-auto">
           <Table>
-            <TableHeader>
+            <TableHeader className="sticky top-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
               <TableRow className="hover:bg-muted/50">
                 <TableHead className="whitespace-nowrap px-6 py-3">
                   操作
@@ -183,11 +183,11 @@ export function CoastalDataTable({
           </Table>
         </div>
         {totalPages > 1 && (
-          <div className="flex items-center justify-between px-6 py-4 border-t">
-            <div className="text-sm text-muted-foreground">
+          <div className=" bottom-0 flex items-center justify-between px-6 py-4 border-t bg-background">
+            <div className="text-sm text-muted-foreground text-nowrap line-clamp-1  pr-4">
               共 {total} 条记录
             </div>
-            <Pagination
+            <CustomPagination
               page={page}
               total={totalPages}
               onChange={onPageChange}
