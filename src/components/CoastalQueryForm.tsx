@@ -13,6 +13,7 @@ import DatePicker, { registerLocale } from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { zhCN } from "date-fns/locale";
 import "./datepicker.css";
+import { addMonths } from "date-fns";
 
 // 注册中文语言包
 registerLocale("zh-CN", zhCN);
@@ -45,6 +46,32 @@ export function CoastalQueryForm({
 
   const handleEndDateChange = (date: Date | null) => {
     onDateRangeChange(startDate, date || undefined);
+  };
+
+  const handleRandomExample = () => {
+    // 随机选择站点
+    const randomStation = STATIONS[Math.floor(Math.random() * STATIONS.length)];
+
+    // 生成随机开始日期（2022-01-01 到 2023-06-30 之间）
+    const minDate = new Date(2022, 0, 1);
+    const maxDate = new Date(2023, 5, 30); // 留出一个月的空间给结束日期
+    const randomStartDate = new Date(
+      minDate.getTime() +
+        Math.random() * (maxDate.getTime() - minDate.getTime())
+    );
+
+    // 随机生成1-8个月的间隔
+    const monthsToAdd = Math.floor(Math.random() * 8) + 1;
+    const randomEndDate = addMonths(randomStartDate, monthsToAdd);
+
+    // 确保结束日期不超过2023-07-31
+    const finalEndDate = new Date(
+      Math.min(randomEndDate.getTime(), new Date(2023, 6, 31).getTime())
+    );
+
+    // 更新状态
+    onStationChange(randomStation.code);
+    onDateRangeChange(randomStartDate, finalEndDate);
   };
 
   const datePickerClassName =
@@ -133,7 +160,14 @@ export function CoastalQueryForm({
               至2023年7月31日
             </p>
           </div>
-          <div className="space-y-2 flex items-end">
+          <div className="space-y-2 flex flex-col justify-end gap-2">
+            <Button
+              variant="secondary"
+              className="w-full"
+              onClick={handleRandomExample}
+            >
+              随机示例
+            </Button>
             <Button variant="outline" className="w-full" onClick={onReset}>
               重置
             </Button>
