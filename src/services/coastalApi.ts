@@ -21,17 +21,18 @@ export const fetchCoastalData = async (
   return response.json();
 };
 
-// 获取图表数据（不分页，只获取气温数据）
+// 获取图表数据（不分页）
 export const fetchTemperatureData = async (
   station: string,
   startDate: string,
-  endDate: string
+  endDate: string,
+  fields: string[] = ["date", "airTemperature", "seaTemperature"]
 ): Promise<CoastalStationData[]> => {
   const params = new URLSearchParams({
     station,
     startDate,
     endDate,
-    fields: "date,airTemperature", // 只获取需要的字段
+    fields: fields.join(","), // 动态字段列表
   });
 
   const response = await fetch(`/api/chartData?${params.toString()}`);

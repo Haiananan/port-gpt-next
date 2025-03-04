@@ -10,9 +10,13 @@ import { CoastalDataTable } from "@/components/CoastalDataTable";
 import { CoastalTemperatureChart } from "@/components/CoastalTemperatureChart";
 
 export default function DataQueryComponent() {
-  const [station, setStation] = useState("");
-  const [startDate, setStartDate] = useState<Date>();
-  const [endDate, setEndDate] = useState<Date>();
+  const [station, setStation] = useState<string>("XCS");
+  const [startDate, setStartDate] = useState<Date | undefined>(
+    new Date("2023-07-01")
+  );
+  const [endDate, setEndDate] = useState<Date | undefined>(
+    new Date("2023-07-31")
+  );
   const [page, setPage] = useState(1);
 
   const { data, error, isLoading } = useQuery({

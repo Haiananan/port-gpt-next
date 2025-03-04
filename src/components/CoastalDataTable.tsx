@@ -62,8 +62,7 @@ export function CoastalDataTable({
                 data.map((item) => (
                   <TableRow key={item.id}>
                     <TableCell className="whitespace-nowrap">
-                      {STATIONS.find((s) => s.code === item.station)?.name ??
-                        item.station}
+                      {item.station}
                     </TableCell>
                     <TableCell className="whitespace-nowrap">
                       {dayjs(item.date).format("YYYY-MM-DD HH:mm:ss")}

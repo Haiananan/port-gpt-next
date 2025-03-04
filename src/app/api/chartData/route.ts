@@ -7,6 +7,10 @@ export async function GET(request: Request) {
     const station = searchParams.get("station");
     const startDate = searchParams.get("startDate");
     const endDate = searchParams.get("endDate");
+    const fields = searchParams.get("fields")?.split(",") || [
+      "date",
+      "airTemperature",
+    ];
 
     if (!station || !startDate || !endDate) {
       return NextResponse.json(
@@ -15,23 +19,37 @@ export async function GET(request: Request) {
       );
     }
 
-    // 获取指定时间范围内的气温数据
+    // 构建动态 select 对象
+    const selectFields: Record<string, boolean> = {
+      id: true,
+      date: true,
+    };
+    fields.forEach((field) => {
+      if (field !== "date" && field !== "id") {
+        selectFields[field] = true;
+      }
+    });
+
+    // 构建动态 where 条件
+    const whereCondition = {
+      station,
+      date: {
+        gte: new Date(startDate),
+        lte: new Date(endDate),
+      },
+      OR: fields
+        .filter((field) => field !== "date" && field !== "id")
+        .map((field) => ({
+          [field]: {
+            not: null,
+          },
+        })),
+    };
+
+    // 获取指定时间范围内的数据
     const data = await prisma.coastalStationData.findMany({
-      where: {
-        station,
-        date: {
-          gte: new Date(startDate),
-          lte: new Date(endDate),
-        },
-        airTemperature: {
-          not: null,
-        },
-      },
-      select: {
-        id: true,
-        date: true,
-        airTemperature: true,
-      },
+      where: whereCondition,
+      select: selectFields,
       orderBy: {
         date: "asc",
       },
