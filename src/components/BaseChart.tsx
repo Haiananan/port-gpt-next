@@ -17,7 +17,18 @@ import { useState, useCallback, useMemo } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { Download, RotateCcw, BarChart3, Eye } from "lucide-react";
+import {
+  Download,
+  RotateCcw,
+  BarChart3,
+  Eye,
+  HelpCircle,
+  LineChart as LineChartIcon,
+  AlertTriangle,
+  Activity,
+  BarChart2,
+  TrendingUp,
+} from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,6 +37,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { toPng } from "html-to-image";
 import * as XLSX from "xlsx";
+import {
+  Tooltip as UITooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export interface BaseChartProps {
   data: any[];
@@ -437,86 +454,130 @@ export function BaseChart({
           <h3 className="text-lg font-medium">{name}</h3>
         </div>
         <div className="flex items-center gap-4">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm">
-                <Eye className="h-4 w-4 mr-2" />
-                显示选项
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              <DropdownMenuItem
-                className="flex items-center gap-2 cursor-pointer"
-                onSelect={(e) => {
-                  e.preventDefault();
-                  setShowOriginal(!showOriginal);
-                }}
-              >
-                <Checkbox
-                  id={`showOriginal-${name}`}
-                  checked={showOriginal}
-                  onCheckedChange={() => setShowOriginal(!showOriginal)}
-                />
-                <span className="text-sm">原始曲线</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                className="flex items-center gap-2 cursor-pointer"
-                onSelect={(e) => {
-                  e.preventDefault();
-                  setShowAnomalies(!showAnomalies);
-                }}
-              >
-                <Checkbox
-                  id={`showAnomalies-${name}`}
-                  checked={showAnomalies}
-                  onCheckedChange={() => setShowAnomalies(!showAnomalies)}
-                />
-                <span className="text-sm">异常点</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                className="flex items-center gap-2 cursor-pointer"
-                onSelect={(e) => {
-                  e.preventDefault();
-                  setShowFit(!showFit);
-                }}
-              >
-                <Checkbox
-                  id={`showFit-${name}`}
-                  checked={showFit}
-                  onCheckedChange={() => setShowFit(!showFit)}
-                />
-                <span className="text-sm">拟合曲线</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                className="flex items-center gap-2 cursor-pointer"
-                onSelect={(e) => {
-                  e.preventDefault();
-                  setShowStats(!showStats);
-                }}
-              >
-                <Checkbox
-                  id={`showStats-${name}`}
-                  checked={showStats}
-                  onCheckedChange={() => setShowStats(!showStats)}
-                />
-                <span className="text-sm">统计信息</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                className="flex items-center gap-2 cursor-pointer"
-                onSelect={(e) => {
-                  e.preventDefault();
-                  setShowTrend(!showTrend);
-                }}
-              >
-                <Checkbox
-                  id={`showTrend-${name}`}
-                  checked={showTrend}
-                  onCheckedChange={() => setShowTrend(!showTrend)}
-                />
-                <span className="text-sm">预测趋势</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <div className="flex items-center gap-2">
+            <TooltipProvider delayDuration={100}>
+              <UITooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant={showOriginal ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setShowOriginal(!showOriginal)}
+                    className="flex items-center gap-2"
+                  >
+                    <LineChartIcon className="h-4 w-4" />
+                    原始曲线
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="max-w-[300px] p-2">
+                  <p className="text-sm">
+                    显示原始数据点连接的曲线，反映实际数据的变化趋势
+                  </p>
+                </TooltipContent>
+              </UITooltip>
+            </TooltipProvider>
+
+            <TooltipProvider delayDuration={100}>
+              <UITooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant={showAnomalies ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setShowAnomalies(!showAnomalies)}
+                    className="flex items-center gap-2"
+                  >
+                    <AlertTriangle className="h-4 w-4" />
+                    异常点
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="max-w-[300px] p-2">
+                  <p className="text-sm">
+                    标记偏离平均值超过3个标准差的异常数据点。
+                    <br />
+                    <br />
+                    算法原理： 1. 计算数据的平均值(μ)和标准差(σ) 2.
+                    对每个数据点x，计算z-score: z = (x-μ)/σ 3. 当|z| {">"}{" "}
+                    3时，判定为异常点
+                  </p>
+                </TooltipContent>
+              </UITooltip>
+            </TooltipProvider>
+
+            <TooltipProvider delayDuration={100}>
+              <UITooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant={showFit ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setShowFit(!showFit)}
+                    className="flex items-center gap-2"
+                  >
+                    <Activity className="h-4 w-4" />
+                    拟合曲线
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="max-w-[300px] p-2">
+                  <p className="text-sm">
+                    使用多项式回归对数据进行拟合，平滑显示整体趋势。
+                    <br />
+                    <br />
+                    算法原理： 1. 构建n次多项式：y = a₀ + a₁x + a₂x² + ... +
+                    aₙxⁿ 2. 使用最小二乘法求解系数 3. 通过高斯消元法解线性方程组
+                    4. 默认使用20次多项式以获得更好的拟合效果
+                  </p>
+                </TooltipContent>
+              </UITooltip>
+            </TooltipProvider>
+
+            <TooltipProvider delayDuration={100}>
+              <UITooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant={showStats ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setShowStats(!showStats)}
+                    className="flex items-center gap-2"
+                  >
+                    <BarChart2 className="h-4 w-4" />
+                    统计信息
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="max-w-[300px] p-2">
+                  <p className="text-sm">
+                    显示数据的统计指标，包括最大值、最小值、平均值等
+                  </p>
+                </TooltipContent>
+              </UITooltip>
+            </TooltipProvider>
+
+            <TooltipProvider delayDuration={100}>
+              <UITooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant={showTrend ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setShowTrend(!showTrend)}
+                    className="flex items-center gap-2"
+                  >
+                    <TrendingUp className="h-4 w-4" />
+                    预测趋势
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="max-w-[300px] p-2">
+                  <p className="text-sm">
+                    基于历史数据计算趋势线，并预测未来7天的变化趋势。
+                    <br />
+                    <br />
+                    算法原理： 1. 将时间转换为连续天数 2. 使用简单线性回归：y =
+                    kx + b 3. 通过最小二乘法计算斜率k和截距b 4.
+                    延伸趋势线预测未来7天的值
+                  </p>
+                </TooltipContent>
+              </UITooltip>
+            </TooltipProvider>
+          </div>
+
+          <div className="h-full w-px bg-border" />
+
           <Button
             variant="outline"
             size="sm"
@@ -531,6 +592,9 @@ export function BaseChart({
             <RotateCcw className="h-4 w-4 mr-2" />
             重置范围
           </Button>
+
+          <div className="h-full w-px bg-border" />
+
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm">
