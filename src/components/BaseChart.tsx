@@ -917,6 +917,29 @@ export function BaseChart({
                 </TooltipContent>
               </UITooltip>
             </TooltipProvider>
+
+            <TooltipProvider delayDuration={100}>
+              <UITooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant={showAdvisor ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setShowAdvisor(!showAdvisor)}
+                  >
+                    <BrainCog className="h-4 w-4 mr-2" />
+                    数据顾问
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="max-w-[300px] p-2">
+                  <p className="text-sm">
+                    智能分析数据特征和趋势。
+                    <br />
+                    <br />
+                    功能： 1. 趋势分析 2. 异常检测 3. 模式识别 4. 改进建议
+                  </p>
+                </TooltipContent>
+              </UITooltip>
+            </TooltipProvider>
           </div>
 
           <div className="h-full w-px bg-border" />
@@ -959,29 +982,6 @@ export function BaseChart({
           </DropdownMenu>
 
           <div className="h-full w-px bg-border" />
-
-          <TooltipProvider delayDuration={100}>
-            <UITooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant={showAdvisor ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setShowAdvisor(!showAdvisor)}
-                >
-                  <BrainCog className="h-4 w-4 mr-2" />
-                  数据顾问
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="top" className="max-w-[300px] p-2">
-                <p className="text-sm">
-                  智能分析数据特征和趋势。
-                  <br />
-                  <br />
-                  功能： 1. 趋势分析 2. 异常检测 3. 模式识别 4. 改进建议
-                </p>
-              </TooltipContent>
-            </UITooltip>
-          </TooltipProvider>
         </div>
       </div>
 
