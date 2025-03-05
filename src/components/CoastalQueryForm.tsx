@@ -14,6 +14,13 @@ import "react-datepicker/dist/react-datepicker.css";
 import { zhCN } from "date-fns/locale";
 import "./datepicker.css";
 import { addMonths } from "date-fns";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 // 注册中文语言包
 registerLocale("zh-CN", zhCN);
@@ -29,6 +36,33 @@ interface CoastalQueryFormProps {
   ) => void;
   onReset: () => void;
 }
+
+const EXAMPLE_PRESETS = [
+  {
+    name: "夏季数据示例",
+    station: "XCS",
+    startDate: new Date(2022, 5, 1), // 6月1日
+    endDate: new Date(2022, 7, 31), // 8月31日
+  },
+  {
+    name: "冬季数据示例",
+    station: "LYG",
+    startDate: new Date(2022, 11, 1), // 12月1日
+    endDate: new Date(2023, 1, 28), // 2月28日
+  },
+  {
+    name: "长期趋势示例",
+    station: "LHT",
+    startDate: new Date(2022, 0, 1), // 1月1日
+    endDate: new Date(2022, 11, 31), // 12月31日
+  },
+  {
+    name: "季节转换示例",
+    station: "SSN",
+    startDate: new Date(2022, 8, 1), // 9月1日
+    endDate: new Date(2022, 10, 30), // 11月30日
+  },
+];
 
 export function CoastalQueryForm({
   station,
@@ -48,30 +82,9 @@ export function CoastalQueryForm({
     onDateRangeChange(startDate, date || undefined);
   };
 
-  const handleRandomExample = () => {
-    // 随机选择站点
-    const randomStation = STATIONS[Math.floor(Math.random() * STATIONS.length)];
-
-    // 生成随机开始日期（2022-01-01 到 2023-06-30 之间）
-    const minDate = new Date(2022, 0, 1);
-    const maxDate = new Date(2023, 5, 30); // 留出一个月的空间给结束日期
-    const randomStartDate = new Date(
-      minDate.getTime() +
-        Math.random() * (maxDate.getTime() - minDate.getTime())
-    );
-
-    // 随机生成1-8个月的间隔
-    const monthsToAdd = Math.floor(Math.random() * 8) + 1;
-    const randomEndDate = addMonths(randomStartDate, monthsToAdd);
-
-    // 确保结束日期不超过2023-07-31
-    const finalEndDate = new Date(
-      Math.min(randomEndDate.getTime(), new Date(2023, 6, 31).getTime())
-    );
-
-    // 更新状态
-    onStationChange(randomStation.code);
-    onDateRangeChange(randomStartDate, finalEndDate);
+  const handleExampleSelect = (preset: (typeof EXAMPLE_PRESETS)[0]) => {
+    onStationChange(preset.station);
+    onDateRangeChange(preset.startDate, preset.endDate);
   };
 
   const datePickerClassName =
@@ -161,13 +174,46 @@ export function CoastalQueryForm({
             </p>
           </div>
           <div className="space-y-2 flex flex-col justify-end gap-2">
-            <Button
-              variant="secondary"
-              className="w-full"
-              onClick={handleRandomExample}
-            >
-              随机示例
-            </Button>
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="secondary" className="w-full">
+                  选择数据示例
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>选择预设数据示例</DialogTitle>
+                </DialogHeader>
+                <div className="grid grid-cols-1 gap-4 py-4">
+                  {EXAMPLE_PRESETS.map((preset, index) => (
+                    <Button
+                      key={index}
+                      variant="outline"
+                      className="w-full justify-start text-left h-auto py-4"
+                      onClick={() => {
+                        handleExampleSelect(preset);
+                      }}
+                    >
+                      <div>
+                        <div className="font-medium">{preset.name}</div>
+                        <div className="text-sm text-muted-foreground">
+                          站点:{" "}
+                          {
+                            STATIONS.find((s) => s.code === preset.station)
+                              ?.name
+                          }{" "}
+                          ({preset.station})
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          时间: {preset.startDate.toLocaleDateString("zh-CN")} -{" "}
+                          {preset.endDate.toLocaleDateString("zh-CN")}
+                        </div>
+                      </div>
+                    </Button>
+                  ))}
+                </div>
+              </DialogContent>
+            </Dialog>
             <Button variant="outline" className="w-full" onClick={onReset}>
               重置
             </Button>
