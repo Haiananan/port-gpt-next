@@ -570,6 +570,60 @@ const DataAdvisorPanel: React.FC<{
   );
 };
 
+// 数据降采样函数
+function downsampleData(
+  data: any[],
+  targetPoints: number = 1000,
+  field: string
+): any[] {
+  if (!data?.length || data.length <= targetPoints) return data;
+
+  const step = Math.ceil(data.length / targetPoints);
+  const sampledData: any[] = [];
+
+  for (let i = 0; i < data.length; i += step) {
+    // 获取当前步长内的所有点
+    const chunk = data.slice(i, Math.min(i + step, data.length));
+
+    // 计算这个区间的统计值
+    const values = chunk
+      .map((d) => d[field])
+      .filter((v) => v != null && !isNaN(v));
+    if (!values.length) continue;
+
+    const min = Math.min(...values);
+    const max = Math.max(...values);
+    const avg = values.reduce((a, b) => a + b, 0) / values.length;
+
+    // 如果区间内的最大最小值差异显著，保留最大最小值点
+    if (Math.abs(max - min) > avg * 0.1) {
+      const minPoint = chunk.find((d) => d[field] === min);
+      const maxPoint = chunk.find((d) => d[field] === max);
+      if (minPoint && maxPoint) {
+        sampledData.push(minPoint);
+        if (minPoint !== maxPoint) {
+          sampledData.push(maxPoint);
+        }
+      }
+    } else {
+      // 否则使用中间点
+      sampledData.push(chunk[Math.floor(chunk.length / 2)]);
+    }
+  }
+
+  // 确保包含首尾点
+  if (data.length > 0) {
+    if (!sampledData.includes(data[0])) {
+      sampledData.unshift(data[0]);
+    }
+    if (!sampledData.includes(data[data.length - 1])) {
+      sampledData.push(data[data.length - 1]);
+    }
+  }
+
+  return sampledData;
+}
+
 // 基础图表组件
 export function BaseChart({
   data,
@@ -598,16 +652,25 @@ export function BaseChart({
   }>({});
   const [showAdvisor, setShowAdvisor] = useState(false);
 
+  // 对数据进行降采样
+  const processedData = useMemo(() => {
+    return downsampleData(data, 1000, dataKey);
+  }, [data, dataKey]);
+
   // 计算拟合数据
   const fittedData = useMemo(() => {
-    if (!showFit) return data;
-    return polynomialRegression(data, dataKey, 20);
-  }, [data, dataKey, showFit]);
+    if (!showFit) return processedData;
+    return polynomialRegression(processedData, dataKey, 20);
+  }, [processedData, dataKey, showFit]);
 
   // 计算趋势线数据
   const trendData = useMemo(() => {
     if (!showTrend) return fittedData;
-    const trendLineData = calculateTrendLine(data, dataKey, predictionDays);
+    const trendLineData = calculateTrendLine(
+      processedData,
+      dataKey,
+      predictionDays
+    );
 
     // 合并拟合数据和趋势数据
     const mergedData = fittedData.map((point) => {
@@ -623,7 +686,7 @@ export function BaseChart({
     // 只添加预测部分的数据点
     const predictionData = trendLineData.filter((p) => p.isPrediction);
     return [...mergedData, ...predictionData];
-  }, [data, dataKey, showTrend, fittedData, predictionDays]);
+  }, [processedData, dataKey, showTrend, fittedData, predictionDays]);
 
   // 计算 Y 轴范围
   const yAxisConfig = useMemo(() => {
@@ -747,14 +810,15 @@ export function BaseChart({
       });
   }, [name]);
 
-  // 导出数据为CSV/Excel
+  // 修改导出数据的处理
   const handleExportData = useCallback(
     (format: "csv" | "excel") => {
+      // 导出时使用原始数据，而不是降采样后的数据
       const headers = ["日期", name, "拟合值"];
-      const rows = fittedData.map((d) => [
+      const rows = data.map((d) => [
         d.date,
         d[dataKey],
-        d[`${dataKey}Fit`],
+        fittedData.find((f) => f.date === d.date)?.[`${dataKey}Fit`],
       ]);
 
       if (format === "csv") {
@@ -777,7 +841,7 @@ export function BaseChart({
         XLSX.writeFile(wb, `${name}-数据.xlsx`);
       }
     },
-    [fittedData, dataKey, name]
+    [data, dataKey, name, fittedData]
   );
 
   return (
