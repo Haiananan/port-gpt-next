@@ -21,9 +21,16 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { useState } from "react";
+import dayjs from "dayjs";
+import "dayjs/locale/zh-cn";
+import { toast } from "sonner";
 
 // 注册中文语言包
 registerLocale("zh-CN", zhCN);
+
+// 设置中文语言
+dayjs.locale("zh-cn");
 
 interface CoastalQueryFormProps {
   station: string;
@@ -40,7 +47,7 @@ interface CoastalQueryFormProps {
 const EXAMPLE_PRESETS = [
   {
     name: "夏季数据示例",
-    station: "XCS",
+    station: "LYG",
     startDate: new Date(2022, 5, 1), // 6月1日
     endDate: new Date(2022, 7, 31), // 8月31日
   },
@@ -72,6 +79,7 @@ export function CoastalQueryForm({
   onDateRangeChange,
   onReset,
 }: CoastalQueryFormProps) {
+  const [dialogOpen, setDialogOpen] = useState(false);
   const selectedStation = STATIONS.find((s) => s.code === station);
 
   const handleStartDateChange = (date: Date | null) => {
@@ -85,6 +93,11 @@ export function CoastalQueryForm({
   const handleExampleSelect = (preset: (typeof EXAMPLE_PRESETS)[0]) => {
     onStationChange(preset.station);
     onDateRangeChange(preset.startDate, preset.endDate);
+    setDialogOpen(false);
+    toast.success("数据示例已设置", {
+      description: `站点: ${preset.station}`,
+      duration: 3000,
+    });
   };
 
   const datePickerClassName =
@@ -174,7 +187,7 @@ export function CoastalQueryForm({
             </p>
           </div>
           <div className="space-y-2 flex flex-col justify-end gap-2">
-            <Dialog>
+            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
               <DialogTrigger asChild>
                 <Button variant="secondary" className="w-full">
                   选择数据示例
@@ -190,9 +203,7 @@ export function CoastalQueryForm({
                       key={index}
                       variant="outline"
                       className="w-full justify-start text-left h-auto py-4"
-                      onClick={() => {
-                        handleExampleSelect(preset);
-                      }}
+                      onClick={() => handleExampleSelect(preset)}
                     >
                       <div>
                         <div className="font-medium">{preset.name}</div>
@@ -205,8 +216,9 @@ export function CoastalQueryForm({
                           ({preset.station})
                         </div>
                         <div className="text-sm text-muted-foreground">
-                          时间: {preset.startDate.toLocaleDateString("zh-CN")} -{" "}
-                          {preset.endDate.toLocaleDateString("zh-CN")}
+                          时间:{" "}
+                          {dayjs(preset.startDate).format("YYYY年MM月DD日")} -{" "}
+                          {dayjs(preset.endDate).format("YYYY年MM月DD日")}
                         </div>
                       </div>
                     </Button>
