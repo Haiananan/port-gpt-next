@@ -67,8 +67,7 @@ export function CoastalWavePeriodChart({
   }
 
   return (
-    <Card>
-      <CardContent>
+ 
         <BaseChart
           data={wavePeriodData}
           dataKey="windWavePeriod"
@@ -78,7 +77,6 @@ export function CoastalWavePeriodChart({
           icon={Timer}
           fitColor="hsl(280, 100%, 65%)"
         />
-      </CardContent>
-    </Card>
+     
   );
 }

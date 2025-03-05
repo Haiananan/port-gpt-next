@@ -67,8 +67,7 @@ export function CoastalWaveHeightChart({
   }
 
   return (
-    <Card>
-      <CardContent>
+   
         <BaseChart
           data={waveHeightData}
           dataKey="windWaveHeight"
@@ -78,7 +77,6 @@ export function CoastalWaveHeightChart({
           icon={Waves}
           fitColor="hsl(35.3 91.2% 65%)"
         />
-      </CardContent>
-    </Card>
+    
   );
 }

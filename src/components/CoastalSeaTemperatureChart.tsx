@@ -71,18 +71,14 @@ export function CoastalSeaTemperatureChart({
   }
 
   return (
-    <Card>
-      <CardContent>
-        <BaseChart
-          data={temperatureData}
-          dataKey="seaTemperature"
-          color="hsl(200, 100%, 50%)"
-          unit="°C"
-          name="海温"
-          icon={Droplets}
-          fitColor="hsl(200, 100%, 65%)"
-        />
-      </CardContent>
-    </Card>
+    <BaseChart
+      data={temperatureData}
+      dataKey="seaTemperature"
+      color="hsl(200, 100%, 50%)"
+      unit="°C"
+      name="海温"
+      icon={Droplets}
+      fitColor="hsl(200, 100%, 65%)"
+    />
   );
 }

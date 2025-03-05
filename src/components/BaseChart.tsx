@@ -13,7 +13,7 @@ import {
   Legend,
   Scatter,
 } from "recharts";
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import React from "react";
 import { Button } from "@/components/ui/button";
@@ -28,6 +28,7 @@ import {
   Activity,
   BarChart2,
   TrendingUp,
+  BrainCog,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -53,6 +54,15 @@ export interface BaseChartProps {
   name?: string;
   icon?: React.ElementType;
   predictionDays?: number;
+}
+
+// 数据顾问接口
+interface DataAdvice {
+  type: "trend" | "anomaly" | "pattern" | "suggestion";
+  title: string;
+  description: string;
+  confidence: number;
+  timestamp?: string;
 }
 
 // 计算多项式回归拟合
@@ -416,6 +426,150 @@ function calculateTrendLine(
   });
 }
 
+// 修改数据顾问组件的样式和布局
+const DataAdvisorPanel: React.FC<{
+  data: any[];
+  dataKey: string;
+  stats: any;
+}> = ({ data, dataKey, stats }) => {
+  const [advice, setAdvice] = useState<DataAdvice[]>([]);
+
+  const analyzeData = () => {
+    const adviceList: DataAdvice[] = [];
+
+    // 1. 趋势分析
+    if (stats?.trend) {
+      adviceList.push({
+        type: "trend",
+        title: "趋势分析",
+        description: `数据整体呈${
+          stats.trend === "up" ? "上升" : "下降"
+        }趋势，当前值为 ${stats.current.toFixed(1)}，相比平均值${
+          stats.current > stats.avg ? "高" : "低"
+        }${Math.abs(stats.current - stats.avg).toFixed(1)}`,
+        confidence: 0.9,
+      });
+    }
+
+    // 2. 异常分析
+    if (stats?.anomalyCount > 0) {
+      const latestAnomaly = stats.anomalies[stats.anomalies.length - 1];
+      adviceList.push({
+        type: "anomaly",
+        title: "异常检测",
+        description: `检测到${stats.anomalyCount}个异常点，最近的异常出现在${latestAnomaly.date}，偏离均值${latestAnomaly.deviation}个标准差`,
+        confidence: 0.85,
+        timestamp: latestAnomaly.date,
+      });
+    }
+
+    // 3. 模式识别
+    const patterns = analyzePatterns(data, dataKey);
+    if (patterns) {
+      adviceList.push({
+        type: "pattern",
+        title: "模式识别",
+        description: patterns,
+        confidence: 0.75,
+      });
+    }
+
+    // 4. 改进建议
+    const suggestions = generateSuggestions(stats);
+    if (suggestions) {
+      adviceList.push({
+        type: "suggestion",
+        title: "改进建议",
+        description: suggestions,
+        confidence: 0.8,
+      });
+    }
+
+    setAdvice(adviceList);
+  };
+
+  const analyzePatterns = (data: any[], key: string) => {
+    if (!data?.length) return null;
+
+    // 计算数据的周期性
+    const values = data.map((d) => d[key]);
+    const diffs = values.slice(1).map((v, i) => v - values[i]);
+    const positiveDiffs = diffs.filter((d) => d > 0).length;
+    const pattern = positiveDiffs > diffs.length / 2 ? "波动上升" : "波动下降";
+
+    return `数据呈${pattern}特征，波动幅度为${stats.stdDev.toFixed(
+      2
+    )}，数据完整度${((stats.count / stats.total) * 100).toFixed(1)}%`;
+  };
+
+  const generateSuggestions = (stats: any) => {
+    if (!stats) return null;
+
+    const suggestions = [];
+
+    if (stats.anomalyCount > stats.count * 0.1) {
+      suggestions.push("建议检查数据采集系统，异常点比例较高");
+    }
+
+    if (stats.stdDev > Math.abs(stats.avg) * 0.5) {
+      suggestions.push("数据波动较大，建议增加采样频率");
+    }
+
+    if (stats.count < stats.total * 0.9) {
+      suggestions.push("数据完整性有待提高，建议检查数据采集流程");
+    }
+
+    return suggestions.join("；");
+  };
+
+  useEffect(() => {
+    analyzeData();
+  }, [data, dataKey, stats]);
+
+  return (
+    <div className="mt-4 border-t pt-4">
+      <div className="grid grid-cols-2 gap-3">
+        {advice.map((item, index) => (
+          <div
+            key={index}
+            className="p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
+          >
+            <div className="flex items-center gap-2 mb-2">
+              <div className="p-1.5 rounded-md bg-background">
+                {item.type === "trend" && (
+                  <TrendingUp className="h-4 w-4 text-blue-500" />
+                )}
+                {item.type === "anomaly" && (
+                  <AlertTriangle className="h-4 w-4 text-red-500" />
+                )}
+                {item.type === "pattern" && (
+                  <Activity className="h-4 w-4 text-purple-500" />
+                )}
+                {item.type === "suggestion" && (
+                  <HelpCircle className="h-4 w-4 text-orange-500" />
+                )}
+              </div>
+              <h4 className="font-medium text-sm flex-1">{item.title}</h4>
+              <div className="text-xs text-muted-foreground px-1.5 py-0.5 rounded-full bg-muted">
+                {(item.confidence * 100).toFixed(0)}%
+              </div>
+            </div>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              {item.description}
+            </p>
+            {item.timestamp && (
+              <div className="mt-2 text-xs text-muted-foreground flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/50"></span>
+                {item.timestamp}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 // 基础图表组件
 export function BaseChart({
   data,
@@ -442,6 +596,7 @@ export function BaseChart({
     x?: [string, string];
     y?: [number, number];
   }>({});
+  const [showAdvisor, setShowAdvisor] = useState(false);
 
   // 计算拟合数据
   const fittedData = useMemo(() => {
@@ -626,7 +781,7 @@ export function BaseChart({
   );
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2 border rounded-lg p-4">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           {icon &&
@@ -802,6 +957,31 @@ export function BaseChart({
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+
+          <div className="h-full w-px bg-border" />
+
+          <TooltipProvider delayDuration={100}>
+            <UITooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant={showAdvisor ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setShowAdvisor(!showAdvisor)}
+                >
+                  <BrainCog className="h-4 w-4 mr-2" />
+                  数据顾问
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="max-w-[300px] p-2">
+                <p className="text-sm">
+                  智能分析数据特征和趋势。
+                  <br />
+                  <br />
+                  功能： 1. 趋势分析 2. 异常检测 3. 模式识别 4. 改进建议
+                </p>
+              </TooltipContent>
+            </UITooltip>
+          </TooltipProvider>
         </div>
       </div>
 
@@ -1065,6 +1245,10 @@ export function BaseChart({
           </LineChart>
         </ResponsiveContainer>
       </div>
+
+      {showAdvisor && stats && (
+        <DataAdvisorPanel data={data} dataKey={dataKey} stats={stats} />
+      )}
     </div>
   );
 }

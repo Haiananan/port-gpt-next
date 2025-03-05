@@ -65,18 +65,14 @@ export function CoastalPressureChart({
   }
 
   return (
-    <Card>
-      <CardContent>
-        <BaseChart
-          data={pressureData}
-          dataKey="airPressure"
-          color="hsl(41, 100%, 50%)"
-          unit="hPa"
-          name="气压"
-          icon={Gauge}
-          fitColor="hsl(41, 100%, 65%)"
-        />
-      </CardContent>
-    </Card>
+    <BaseChart
+      data={pressureData}
+      dataKey="airPressure"
+      color="hsl(41, 100%, 50%)"
+      unit="hPa"
+      name="气压"
+      icon={Gauge}
+      fitColor="hsl(41, 100%, 65%)"
+    />
   );
 }

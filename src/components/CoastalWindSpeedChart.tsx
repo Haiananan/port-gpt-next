@@ -71,18 +71,14 @@ export function CoastalWindSpeedChart({
   }
 
   return (
-    <Card>
-      <CardContent>
-        <BaseChart
-          data={windSpeedData}
-          dataKey="windSpeed"
-          color="hsl(142.1 76.2% 36.3%)"
-          unit="m/s"
-          name="风速"
-          icon={Wind}
-          fitColor="hsl(142.1 76.2% 50%)"
-        />
-      </CardContent>
-    </Card>
+    <BaseChart
+      data={windSpeedData}
+      dataKey="windSpeed"
+      color="hsl(142.1 76.2% 36.3%)"
+      unit="m/s"
+      name="风速"
+      icon={Wind}
+      fitColor="hsl(142.1 76.2% 50%)"
+    />
   );
 }

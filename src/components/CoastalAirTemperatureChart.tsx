@@ -71,18 +71,14 @@ export function CoastalAirTemperatureChart({
   }
 
   return (
-    <Card>
-      <CardContent>
-        <BaseChart
-          data={temperatureData}
-          dataKey="airTemperature"
-          color="hsl(0, 100%, 50%)"
-          unit="°C"
-          name="气温"
-          icon={Thermometer}
-          fitColor="hsl(0, 100%, 65%)"
-        />
-      </CardContent>
-    </Card>
+    <BaseChart
+      data={temperatureData}
+      dataKey="airTemperature"
+      color="hsl(0, 100%, 50%)"
+      unit="°C"
+      name="气温"
+      icon={Thermometer}
+      fitColor="hsl(0, 100%, 65%)"
+    />
   );
 }
