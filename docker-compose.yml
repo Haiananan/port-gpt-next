@@ -1,0 +1,17 @@
+version: "3.8"
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=file:/app/prisma/db/dev.db
+      - NODE_ENV=production
+      - PNPM_HOME=/pnpm
+    volumes:
+      # 数据库持久化：把SQLite数据库文件挂载到宿主机
+      - ./prisma/db:/app/prisma/db
+    restart: unless-stopped
