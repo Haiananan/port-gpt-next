@@ -15,6 +15,9 @@ export interface CoastalStationData {
   windWavePeriod: number | null;
   surgeHeight: number | null;
   surgePeriod: number | null;
+  waterLevel: number | null;
+  currentSpeed: number | null;
+  currentDirection: number | null;
   createdAt: string;
   updatedAt: string;
 }

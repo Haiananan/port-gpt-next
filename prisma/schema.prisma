@@ -11,24 +11,27 @@ datasource db {
 }
 
 model CoastalStationData {
-    id             Int      @id @default(autoincrement()) // 唯一标识符
-    station        String // 1-15 站点名称
-    date           DateTime // 16-19 日期 
-    latitude       Float // 24-29 纬度 (°)，精度: 0.01
-    longitude      Float // 30-36 经度 (°)，精度: 0.01
-    visibility     Float? // 37-43 能见度 (km)，9 表示无观测
-    airTemperature Float? // 44-50 气温 (°C)，9 表示无观测
-    windDirection  Float? // 51-57 风向 (°)，9 表示无观测
-    windSpeed      Float? // 58-64 风速 (m/s)，9 表示无观测
-    airPressure    Float? // 65-71 气压 (hPa)，9 表示无观测
-    precipitation  Float? // 72-77 过去 6 小时降水量 (ml)，9 表示无观测
-    seaTemperature Float? // 78-83 海水温度 (°C)，9 表示无观测
-    windWaveHeight Float? // 84-89 风浪高度 (m)，9 表示无观测
-    windWavePeriod Float? // 90-95 风浪周期 (s)，9 表示无观测
-    surgeHeight    Float? // 96-101 涨潮高度 (m)，9 表示无观测
-    surgePeriod    Float? // 102-107 涨潮周期 (s)，9 表示无观测
-    createdAt      DateTime @default(now()) // 创建时间
-    updatedAt      DateTime @updatedAt // 更新时间
+    id               Int      @id @default(autoincrement()) // 唯一标识符
+    station          String // 1-15 站点名称
+    date             DateTime // 16-19 日期 
+    latitude         Float // 24-29 纬度 (°)，精度: 0.01
+    longitude        Float // 30-36 经度 (°)，精度: 0.01
+    visibility       Float? // 37-43 能见度 (km)，9 表示无观测
+    airTemperature   Float? // 44-50 气温 (°C)，9 表示无观测
+    windDirection    Float? // 51-57 风向 (°)，9 表示无观测
+    windSpeed        Float? // 58-64 风速 (m/s)，9 表示无观测
+    airPressure      Float? // 65-71 气压 (hPa)，9 表示无观测
+    precipitation    Float? // 72-77 过去 6 小时降水量 (ml)，9 表示无观测
+    seaTemperature   Float? // 78-83 海水温度 (°C)，9 表示无观测
+    windWaveHeight   Float? // 84-89 风浪高度 (m)，9 表示无观测
+    windWavePeriod   Float? // 90-95 风浪周期 (s)，9 表示无观测
+    surgeHeight      Float? // 96-101 涨潮高度 (m)，9 表示无观测
+    surgePeriod      Float? // 102-107 涨潮周期 (s)，9 表示无观测
+    waterLevel       Float? // 水位（米）
+    currentSpeed     Float? // 流速（米/秒）
+    currentDirection Float? // 流向（度）
+    createdAt        DateTime @default(now()) // 创建时间
+    updatedAt        DateTime @updatedAt // 更新时间
 
     @@unique([station, date]) // 为站点、日期和时间创建唯一约束
     @@index([station, date]) // 为站点、日期和时间创建索引

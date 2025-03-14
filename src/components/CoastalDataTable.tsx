@@ -47,6 +47,9 @@ export function CoastalDataTable({
       `风浪周期: ${row.windWavePeriod?.toFixed(1) ?? "-"} s`,
       `涨潮高度: ${row.surgeHeight?.toFixed(1) ?? "-"} m`,
       `涨潮周期: ${row.surgePeriod?.toFixed(1) ?? "-"} s`,
+      `水位: ${row.waterLevel?.toFixed(1) ?? "-"} m`,
+      `流速: ${row.currentSpeed?.toFixed(1) ?? "-"} m/s`,
+      `流向: ${row.currentDirection?.toFixed(1) ?? "-"} °`,
     ].join("\n");
 
     navigator.clipboard.writeText(text).then(() => {
@@ -109,12 +112,21 @@ export function CoastalDataTable({
                 <TableHead className="whitespace-nowrap px-6 py-3">
                   涨潮周期(s)
                 </TableHead>
+                <TableHead className="whitespace-nowrap px-6 py-3">
+                  水位(m)
+                </TableHead>
+                <TableHead className="whitespace-nowrap px-6 py-3">
+                  流速(m/s)
+                </TableHead>
+                <TableHead className="whitespace-nowrap px-6 py-3">
+                  流向(°)
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {data.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={16} className="text-center h-32">
+                  <TableCell colSpan={19} className="text-center h-32">
                     暂无数据
                   </TableCell>
                 </TableRow>
@@ -175,6 +187,15 @@ export function CoastalDataTable({
                     </TableCell>
                     <TableCell className="px-6 py-3">
                       {item.surgePeriod?.toFixed(1) ?? "-"}
+                    </TableCell>
+                    <TableCell className="px-6 py-3">
+                      {item.waterLevel?.toFixed(1) ?? "-"}
+                    </TableCell>
+                    <TableCell className="px-6 py-3">
+                      {item.currentSpeed?.toFixed(1) ?? "-"}
+                    </TableCell>
+                    <TableCell className="px-6 py-3">
+                      {item.currentDirection?.toFixed(1) ?? "-"}
                     </TableCell>
                   </TableRow>
                 ))

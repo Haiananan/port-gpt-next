@@ -1,5 +1,15 @@
 import { StatsCard, StatItem } from "@/components/ui/stats-card";
-import { Thermometer, Droplets, Gauge, Wind, Waves, Timer } from "lucide-react";
+import {
+  Thermometer,
+  Droplets,
+  Gauge,
+  Wind,
+  Waves,
+  Timer,
+  Ruler,
+  Navigation2,
+  Compass,
+} from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchStatsData } from "@/services/coastalApi";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -97,6 +107,30 @@ const statsConfig = [
     icon: Timer,
     key: "wavePeriod",
     statItems: statsItemConfigs.wavePeriod,
+  },
+  {
+    title: "水位",
+    unit: "m",
+    color: "hsl(190, 90%, 50%)",
+    icon: Ruler,
+    key: "waterLevel",
+    statItems: statsItemConfigs.base,
+  },
+  {
+    title: "流速",
+    unit: "m/s",
+    color: "hsl(150, 90%, 40%)",
+    icon: Navigation2,
+    key: "currentSpeed",
+    statItems: statsItemConfigs.base,
+  },
+  {
+    title: "流向",
+    unit: "°",
+    color: "hsl(220, 90%, 60%)",
+    icon: Compass,
+    key: "currentDirection",
+    statItems: statsItemConfigs.base,
   },
 ];
 

@@ -36,6 +36,9 @@ export async function GET(request: Request) {
       selectFields.windWaveHeight = true;
       selectFields.windWavePeriod = true;
       selectFields.station = true;
+      selectFields.waterLevel = true;
+      selectFields.currentSpeed = true;
+      selectFields.currentDirection = true;
     } else {
       // 否则只选择指定字段
       fields.forEach((field) => {

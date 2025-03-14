@@ -345,7 +345,7 @@ export function ExtremeValueAnalysis({
             </CardTitle>
             <div className="flex gap-2">
               <Button
-                variant="outline"
+                variant={loadCalculation ? "default" : "outline"}
                 size="sm"
                 onClick={() => setLoadCalculation(!loadCalculation)}
               >

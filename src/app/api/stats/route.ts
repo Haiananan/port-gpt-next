@@ -8,6 +8,9 @@ interface CoastalDataRecord {
   windSpeed: number | null;
   windWaveHeight: number | null;
   windWavePeriod: number | null;
+  waterLevel: number | null;
+  currentSpeed: number | null;
+  currentDirection: number | null;
 }
 
 // 计算趋势（使用简单的首尾差值）
@@ -101,6 +104,9 @@ export async function GET(request: Request) {
         windSpeed: true,
         windWaveHeight: true,
         windWavePeriod: true,
+        waterLevel: true,
+        currentSpeed: true,
+        currentDirection: true,
       },
       orderBy: {
         date: "asc",
@@ -146,6 +152,16 @@ export async function GET(request: Request) {
         t110: wavePeriodSpecialStats.h110,
         t113: wavePeriodSpecialStats.h113,
       },
+      // 添加新字段的统计
+      waterLevel: calculateStats(
+        data.map((d: CoastalDataRecord) => d.waterLevel ?? 0)
+      ),
+      currentSpeed: calculateStats(
+        data.map((d: CoastalDataRecord) => d.currentSpeed ?? 0)
+      ),
+      currentDirection: calculateStats(
+        data.map((d: CoastalDataRecord) => d.currentDirection ?? 0)
+      ),
     };
 
     return NextResponse.json(stats);
