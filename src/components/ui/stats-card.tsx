@@ -6,13 +6,22 @@ export interface StatsData {
   min: number;
   avg: number;
   trend: number;
-  // 波高/周期特殊统计（可选）
+  // 特殊统计指标（可选）
   h13?: number;
   h110?: number;
   h113?: number;
   t13?: number;
   t110?: number;
   t113?: number;
+  // 其他可能的统计指标
+  [key: string]: number | undefined;
+}
+
+// 定义统计指标项配置
+export interface StatItem {
+  key: string; // 数据键名
+  label: string; // 显示标签
+  format?: (value: number, unit: string) => string; // 可选的格式化函数
 }
 
 interface StatsCardProps {
@@ -20,7 +29,7 @@ interface StatsCardProps {
   stats: StatsData | null;
   unit: string;
   color: string;
-  showWaveStats?: boolean; // 是否显示特殊波浪统计数据
+  statItems?: StatItem[]; // 统计指标项配置数组
   icon: React.ComponentType<{
     className?: string;
     style?: React.CSSProperties;
@@ -32,7 +41,7 @@ export function StatsCard({
   stats,
   unit,
   color,
-  showWaveStats = false,
+  statItems,
   icon: Icon,
 }: StatsCardProps) {
   if (!stats) {
@@ -49,6 +58,16 @@ export function StatsCard({
     );
   }
 
+  // 默认显示的基础统计指标
+  const defaultStatItems: StatItem[] = [
+    { key: "max", label: "最高" },
+    { key: "min", label: "最低" },
+    { key: "avg", label: "平均" },
+  ];
+
+  // 合并默认项和传入的自定义项
+  const displayItems = statItems || defaultStatItems;
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -63,28 +82,23 @@ export function StatsCard({
       </CardHeader>
       <CardContent className="space-y-2">
         <div className="grid grid-cols-3 gap-4">
-          <div className="flex flex-col">
-            <span className="text-xs text-muted-foreground">最高</span>
-            <span className="text-xl font-bold">
-              {stats.max.toFixed(2)}
-              {unit}
-            </span>
-          </div>
-          <div className="flex flex-col">
-            <span className="text-xs text-muted-foreground">最低</span>
-            <span className="text-xl font-bold">
-              {stats.min.toFixed(2)}
-              {unit}
-            </span>
-          </div>
-          <div className="flex flex-col">
-            <span className="text-xs text-muted-foreground">平均</span>
-            <span className="text-xl font-bold">
-              {stats.avg.toFixed(2)}
-              {unit}
-            </span>
-          </div>
+          {displayItems.map(
+            (item) =>
+              stats[item.key] !== undefined && (
+                <div key={item.key} className="flex flex-col">
+                  <span className="text-xs text-muted-foreground">
+                    {item.label}
+                  </span>
+                  <span className="text-xl font-bold">
+                    {item.format
+                      ? item.format(stats[item.key] as number, unit)
+                      : `${(stats[item.key] as number).toFixed(2)}${unit}`}
+                  </span>
+                </div>
+              )
+          )}
         </div>
+
         <div className="flex items-center gap-1 text-sm">
           <span className="text-muted-foreground">
             {stats.trend > 0 ? "上升" : "下降"}
@@ -99,69 +113,6 @@ export function StatsCard({
             <TrendingDown className="h-4 w-4" style={{ color }} />
           )}
         </div>
-
-        {/* 波浪特殊统计数据显示 */}
-        {showWaveStats && (
-          <div className="pt-2 border-t">
-            <div className="text-xs text-muted-foreground mb-2">特殊统计</div>
-            <div className="grid grid-cols-3 gap-4">
-              {stats.h13 !== undefined && (
-                <div className="flex flex-col">
-                  <span className="text-xs text-muted-foreground">H1/3</span>
-                  <span className="text-lg font-bold">
-                    {stats.h13.toFixed(2)}
-                    {unit}
-                  </span>
-                </div>
-              )}
-              {stats.h110 !== undefined && (
-                <div className="flex flex-col">
-                  <span className="text-xs text-muted-foreground">H1/10</span>
-                  <span className="text-lg font-bold">
-                    {stats.h110.toFixed(2)}
-                    {unit}
-                  </span>
-                </div>
-              )}
-              {stats.h113 !== undefined && (
-                <div className="flex flex-col">
-                  <span className="text-xs text-muted-foreground">H1/13</span>
-                  <span className="text-lg font-bold">
-                    {stats.h113.toFixed(2)}
-                    {unit}
-                  </span>
-                </div>
-              )}
-              {stats.t13 !== undefined && (
-                <div className="flex flex-col">
-                  <span className="text-xs text-muted-foreground">T1/3</span>
-                  <span className="text-lg font-bold">
-                    {stats.t13.toFixed(2)}
-                    {unit}
-                  </span>
-                </div>
-              )}
-              {stats.t110 !== undefined && (
-                <div className="flex flex-col">
-                  <span className="text-xs text-muted-foreground">T1/10</span>
-                  <span className="text-lg font-bold">
-                    {stats.t110.toFixed(2)}
-                    {unit}
-                  </span>
-                </div>
-              )}
-              {stats.t113 !== undefined && (
-                <div className="flex flex-col">
-                  <span className="text-xs text-muted-foreground">T1/13</span>
-                  <span className="text-lg font-bold">
-                    {stats.t113.toFixed(2)}
-                    {unit}
-                  </span>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
       </CardContent>
     </Card>
   );
