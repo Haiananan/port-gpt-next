@@ -21,6 +21,56 @@ export const fetchCoastalData = async (
   return response.json();
 };
 
+// 获取所有数据（不分页），用于极值分析
+export const fetchAllCoastalData = async (
+  station: string | null,
+  startDate: string | null,
+  endDate: string | null
+): Promise<CoastalStationData[]> => {
+  const params = new URLSearchParams();
+  if (station) params.append("station", station);
+  if (startDate) params.append("startDate", startDate);
+  if (endDate) params.append("endDate", endDate);
+  params.append("all", "true"); // 请求所有数据
+
+  const response = await fetch(`/api/chartData?${params.toString()}`);
+  if (!response.ok) {
+    throw new Error("获取完整数据失败");
+  }
+  return response.json();
+};
+
+// 获取模拟极值数据
+export interface MockExtremeValue {
+  year: number;
+  value: number;
+}
+
+export interface MockExtremeValuesResponse {
+  parameter: string;
+  type: "max" | "min";
+  years: number;
+  data: MockExtremeValue[];
+}
+
+export const fetchMockExtremeValues = async (
+  parameter: string = "waveHeight",
+  type: "max" | "min" = "max",
+  years: number = 30
+): Promise<MockExtremeValuesResponse> => {
+  const params = new URLSearchParams({
+    parameter,
+    type,
+    years: years.toString(),
+  });
+
+  const response = await fetch(`/api/mockExtremeValues?${params.toString()}`);
+  if (!response.ok) {
+    throw new Error("获取模拟极值数据失败");
+  }
+  return response.json();
+};
+
 // 获取图表数据（不分页）
 export const fetchTemperatureData = async (
   station: string,

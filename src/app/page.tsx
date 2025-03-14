@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
-import { fetchCoastalData } from "@/services/coastalApi";
+import { fetchCoastalData, fetchAllCoastalData } from "@/services/coastalApi";
 import { CoastalQueryForm } from "@/components/CoastalQueryForm";
 import { CoastalDataTable } from "@/components/CoastalDataTable";
 import { CoastalAirTemperatureChart } from "@/components/CoastalAirTemperatureChart";
@@ -29,7 +29,13 @@ export default function DataQueryComponent() {
     new Date("2023-07-31")
   );
   const [page, setPage] = useState(1);
+  const [isClient, setIsClient] = useState(false);
 
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  // 获取分页表格数据
   const { data, error, isLoading } = useQuery({
     queryKey: [
       "tableData",
@@ -44,6 +50,23 @@ export default function DataQueryComponent() {
         startDate?.toISOString() || null,
         endDate?.toISOString() || null,
         page
+      ),
+    enabled: Boolean(startDate && endDate && station),
+  });
+
+  // 获取所有时间范围内的原始数据，用于极值分析
+  const { data: allData, isLoading: isLoadingAllData } = useQuery({
+    queryKey: [
+      "allData",
+      station || null,
+      startDate?.toISOString() || null,
+      endDate?.toISOString() || null,
+    ] as const,
+    queryFn: () =>
+      fetchAllCoastalData(
+        station || null,
+        startDate?.toISOString() || null,
+        endDate?.toISOString() || null
       ),
     enabled: Boolean(startDate && endDate && station),
   });
@@ -86,95 +109,112 @@ export default function DataQueryComponent() {
             <AlertDescription>请选择站点和日期范围以查看数据</AlertDescription>
           </Alert>
         ) : (
-          <>
-            <Tabs defaultValue="charts" className="w-full">
-              <div className="flex justify-start mb-6">
-                <TabsList className="inline-flex">
-                  <TabsTrigger
-                    value="charts"
-                    className="flex items-center gap-2"
-                  >
-                    <ChartBar className="h-4 w-4" />
-                    图表可视化
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="table"
-                    className="flex items-center gap-2"
-                  >
-                    <Table2 className="h-4 w-4" />
-                    数据表格
-                  </TabsTrigger>
-                </TabsList>
-              </div>
-
-              <TabsContent value="charts" className="space-y-6">
-                <CoastalStats
-                  station={station}
-                  startDate={startDate}
-                  endDate={endDate}
-                />
-                <div className="grid grid-cols-1 gap-6">
-                  <CoastalAirTemperatureChart
-                    station={station}
-                    startDate={startDate}
-                    endDate={endDate}
-                  />
-                  <CoastalSeaTemperatureChart
-                    station={station}
-                    startDate={startDate}
-                    endDate={endDate}
-                  />
-                  <CoastalPressureChart
-                    station={station}
-                    startDate={startDate}
-                    endDate={endDate}
-                  />
-                  <CoastalWaveHeightChart
-                    station={station}
-                    startDate={startDate}
-                    endDate={endDate}
-                  />
-                  <CoastalWavePeriodChart
-                    station={station}
-                    startDate={startDate}
-                    endDate={endDate}
-                  />
-                  <CoastalWindSpeedChart
-                    station={station}
-                    startDate={startDate}
-                    endDate={endDate}
-                  />
-                </div>
-                <div className="mt-6">
-                  <CoastalWindChart
-                    station={station}
-                    startDate={startDate}
-                    endDate={endDate}
-                  />
-                </div>
-              </TabsContent>
-
-              <TabsContent value="table" className="min-h-[500px]">
-                {isLoading ? (
-                  <div className="space-y-3">
-                    <Skeleton className="h-[500px] w-full" />
+          <div>
+            {isClient ? (
+              <div>
+                <Tabs defaultValue="charts" className="w-full">
+                  <div className="flex justify-start mb-6">
+                    <TabsList className="inline-flex">
+                      <TabsTrigger
+                        value="charts"
+                        className="flex items-center gap-2"
+                      >
+                        <ChartBar className="h-4 w-4" />
+                        图表可视化
+                      </TabsTrigger>
+                      <TabsTrigger
+                        value="table"
+                        className="flex items-center gap-2"
+                      >
+                        <Table2 className="h-4 w-4" />
+                        数据表格
+                      </TabsTrigger>
+                    </TabsList>
                   </div>
-                ) : error ? (
-                  <Alert variant="destructive">
-                    <AlertDescription>错误: {error.message}</AlertDescription>
-                  </Alert>
-                ) : data ? (
-                  <CoastalDataTable
-                    data={data.data}
-                    total={data.pagination.total}
-                    page={data.pagination.page}
-                    totalPages={data.pagination.totalPages}
-                    onPageChange={setPage}
-                  />
-                ) : null}
-              </TabsContent>
-            </Tabs>
-          </>
+
+                  <TabsContent value="charts" className="space-y-6">
+                    {isLoadingAllData ? (
+                      <div className="h-[200px] w-full flex items-center justify-center">
+                        <Skeleton className="h-[150px] w-full" />
+                      </div>
+                    ) : (
+                      <CoastalStats
+                        station={station}
+                        startDate={startDate}
+                        endDate={endDate}
+                        data={allData}
+                      />
+                    )}
+                    <div className="grid grid-cols-1 gap-6">
+                      <CoastalAirTemperatureChart
+                        station={station}
+                        startDate={startDate}
+                        endDate={endDate}
+                      />
+                      <CoastalSeaTemperatureChart
+                        station={station}
+                        startDate={startDate}
+                        endDate={endDate}
+                      />
+                      <CoastalPressureChart
+                        station={station}
+                        startDate={startDate}
+                        endDate={endDate}
+                      />
+                      <CoastalWaveHeightChart
+                        station={station}
+                        startDate={startDate}
+                        endDate={endDate}
+                      />
+                      <CoastalWavePeriodChart
+                        station={station}
+                        startDate={startDate}
+                        endDate={endDate}
+                      />
+                      <CoastalWindSpeedChart
+                        station={station}
+                        startDate={startDate}
+                        endDate={endDate}
+                      />
+                    </div>
+                    <div className="mt-6">
+                      <CoastalWindChart
+                        station={station}
+                        startDate={startDate}
+                        endDate={endDate}
+                      />
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="table" className="min-h-[500px]">
+                    {isLoading ? (
+                      <div className="space-y-3">
+                        <Skeleton className="h-[500px] w-full" />
+                      </div>
+                    ) : error ? (
+                      <Alert variant="destructive">
+                        <AlertDescription>
+                          错误: {error.message}
+                        </AlertDescription>
+                      </Alert>
+                    ) : data ? (
+                      <CoastalDataTable
+                        data={data.data}
+                        total={data.pagination.total}
+                        page={data.pagination.page}
+                        totalPages={data.pagination.totalPages}
+                        onPageChange={setPage}
+                      />
+                    ) : null}
+                  </TabsContent>
+                </Tabs>
+              </div>
+            ) : (
+              <div className="py-8 text-center">
+                <Skeleton className="h-[400px] w-full" />
+              </div>
+            )}
+          </div>
         )}
       </div>
     </main>

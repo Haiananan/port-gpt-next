@@ -4,11 +4,15 @@ import { useQuery } from "@tanstack/react-query";
 import { fetchStatsData } from "@/services/coastalApi";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { useState, useEffect } from "react";
+import { ExtremeValueAnalysis } from "@/components/ExtremeValueAnalysis";
 
 interface CoastalStatsProps {
   station: string;
   startDate: Date;
   endDate: Date;
+  data?: any[]; // 可选的原始数据，用于极值分析
 }
 
 const statsConfig = [
@@ -66,7 +70,19 @@ export function CoastalStats({
   station,
   startDate,
   endDate,
+  data,
 }: CoastalStatsProps) {
+  // 使用useState的延迟初始化函数来避免Hydration不匹配
+  const [showExtremeAnalysis, setShowExtremeAnalysis] = useState(() => false);
+  const [analysisKey, setAnalysisKey] = useState<string | null>(null);
+  // 添加客户端渲染标记，避免SSR和客户端渲染不一致
+  const [isClient, setIsClient] = useState(false);
+
+  // 在客户端渲染后设置isClient为true
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
   const { data: statsData, isLoading } = useQuery({
     queryKey: [
       "stats",
@@ -91,21 +107,34 @@ export function CoastalStats({
     );
   }
 
+  // 找到当前选择的配置
+  const currentConfig = analysisKey
+    ? statsConfig.find((config) => config.key === analysisKey)
+    : null;
+
+  // 确保只在客户端渲染交互性内容
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6">
-      {statsConfig.map((config) => (
-        <StatsCard
-          key={config.title}
-          title={config.title}
-          stats={
-            statsData ? statsData[config.key as keyof typeof statsData] : null
-          }
-          unit={config.unit}
-          color={config.color}
-          icon={config.icon}
-          showWaveStats={config.showWaveStats}
-        />
-      ))}
+    <div className="space-y-6">
+     
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+        {statsConfig.map((config) => (
+          <div key={config.key}>
+            <StatsCard
+              title={config.title}
+              stats={
+                statsData
+                  ? statsData[config.key as keyof typeof statsData]
+                  : null
+              }
+              unit={config.unit}
+              color={config.color}
+              icon={config.icon}
+              showWaveStats={config.showWaveStats}
+            />
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

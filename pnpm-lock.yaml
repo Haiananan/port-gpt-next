@@ -98,9 +98,6 @@ importers:
       '@types/react-datepicker':
         specifier: ^7.0.0
         version: 7.0.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
-      '@types/xlsx':
-        specifier: ^0.0.36
-        version: 0.0.36
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -186,6 +183,9 @@ importers:
       '@types/react-dom':
         specifier: ^19
         version: 19.0.4(@types/react@19.0.10)
+      '@types/xlsx':
+        specifier: ^0.0.36
+        version: 0.0.36
       prisma:
         specifier: ^6.4.1
         version: 6.4.1(typescript@5.8.2)

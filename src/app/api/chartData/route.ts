@@ -11,6 +11,7 @@ export async function GET(request: Request) {
       "date",
       "airTemperature",
     ];
+    const all = searchParams.get("all") === "true";
 
     if (!station || !startDate || !endDate) {
       return NextResponse.json(
@@ -24,11 +25,25 @@ export async function GET(request: Request) {
       id: true,
       date: true,
     };
-    fields.forEach((field) => {
-      if (field !== "date" && field !== "id") {
-        selectFields[field] = true;
-      }
-    });
+
+    // 当请求所有数据时，包含所有字段
+    if (all) {
+      selectFields.airTemperature = true;
+      selectFields.seaTemperature = true;
+      selectFields.airPressure = true;
+      selectFields.windDirection = true;
+      selectFields.windSpeed = true;
+      selectFields.windWaveHeight = true;
+      selectFields.windWavePeriod = true;
+      selectFields.station = true;
+    } else {
+      // 否则只选择指定字段
+      fields.forEach((field) => {
+        if (field !== "date" && field !== "id") {
+          selectFields[field] = true;
+        }
+      });
+    }
 
     // 构建动态 where 条件
     const whereCondition = {
@@ -37,13 +52,18 @@ export async function GET(request: Request) {
         gte: new Date(startDate),
         lte: new Date(endDate),
       },
-      OR: fields
-        .filter((field) => field !== "date" && field !== "id")
-        .map((field) => ({
-          [field]: {
-            not: null,
-          },
-        })),
+      // 当请求所有数据时不需要过滤非空字段
+      ...(all
+        ? {}
+        : {
+            OR: fields
+              .filter((field) => field !== "date" && field !== "id")
+              .map((field) => ({
+                [field]: {
+                  not: null,
+                },
+              })),
+          }),
     };
 
     // 获取指定时间范围内的数据
