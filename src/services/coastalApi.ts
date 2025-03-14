@@ -227,7 +227,6 @@ export async function fetchStatsData(
   return data;
 }
 
-// 获取流速和流向数据
 export async function fetchCurrentData(
   station: string,
   startDate: string,
@@ -247,7 +246,6 @@ export async function fetchCurrentData(
   return response.json();
 }
 
-// 获取水位数据
 export async function fetchWaterLevelData(
   station: string,
   startDate: string,

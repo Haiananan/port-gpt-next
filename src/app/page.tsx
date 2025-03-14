@@ -19,6 +19,8 @@ import { CoastalWindSpeedChart } from "@/components/CoastalWindSpeedChart";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ChartBar, Table2 } from "lucide-react";
 import { ScrollToTop } from "@/components/ui/scroll-to-top";
+import { CoastalCurrentChart } from "@/components/CoastalCurrentChart";
+import { CoastalWaterLevelChart } from "@/components/CoastalWaterLevelChart";
 
 export default function DataQueryComponent() {
   const [station, setStation] = useState<string>("XCS");
@@ -172,6 +174,16 @@ export default function DataQueryComponent() {
                         endDate={endDate}
                       />
                       <CoastalWindSpeedChart
+                        station={station}
+                        startDate={startDate}
+                        endDate={endDate}
+                      />
+                      <CoastalCurrentChart
+                        station={station}
+                        startDate={startDate}
+                        endDate={endDate}
+                      />
+                      <CoastalWaterLevelChart
                         station={station}
                         startDate={startDate}
                         endDate={endDate}

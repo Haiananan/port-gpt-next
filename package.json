@@ -75,6 +75,7 @@
     "@types/xlsx": "^0.0.36",
     "prisma": "^6.4.1",
     "tailwindcss": "^4",
+    "tsx": "^4.19.3",
     "typescript": "^5"
   }
 }

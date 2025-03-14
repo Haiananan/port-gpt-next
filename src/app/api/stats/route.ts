@@ -174,10 +174,15 @@ export async function GET(request: Request) {
         t110: wavePeriodSpecialStats.h110,
         t113: wavePeriodSpecialStats.h113,
       },
-      // mock
-      waterLevel: mockData(data.length, randomNumberRange(0, 10), 2),
-      currentSpeed: mockData(data.length, randomNumberRange(0, 10), 2),
-      currentDirection: mockData(data.length, randomNumberRange(0, 360), 2),
+      waterLevel: calculateStats(
+        data.map((d: CoastalDataRecord) => d.waterLevel ?? 0)
+      ),
+      currentSpeed: calculateStats(
+        data.map((d: CoastalDataRecord) => d.currentSpeed ?? 0)
+      ),
+      currentDirection: calculateStats(
+        data.map((d: CoastalDataRecord) => d.currentDirection ?? 0)
+      ),
     };
 
     return NextResponse.json(stats);
