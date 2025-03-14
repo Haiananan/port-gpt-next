@@ -76,14 +76,7 @@ const statsConfig = [
     key: "seaTemperature",
     statItems: statsItemConfigs.base,
   },
-  {
-    title: "气压",
-    unit: "hPa",
-    color: "hsl(35.3 91.2% 51.6%)",
-    icon: Gauge,
-    key: "pressure",
-    statItems: statsItemConfigs.base,
-  },
+  
   {
     title: "风速",
     unit: "m/s",
@@ -93,20 +86,12 @@ const statsConfig = [
     statItems: statsItemConfigs.windSpeed,
   },
   {
-    title: "浪高",
-    unit: "m",
+    title: "气压",
+    unit: "hPa",
     color: "hsl(35.3 91.2% 51.6%)",
-    icon: Waves,
-    key: "waveHeight",
-    statItems: statsItemConfigs.waveHeight,
-  },
-  {
-    title: "浪周期",
-    unit: "s",
-    color: "hsl(262.1 83.3% 57.8%)",
-    icon: Timer,
-    key: "wavePeriod",
-    statItems: statsItemConfigs.wavePeriod,
+    icon: Gauge,
+    key: "pressure",
+    statItems: statsItemConfigs.base,
   },
   {
     title: "水位",
@@ -125,12 +110,20 @@ const statsConfig = [
     statItems: statsItemConfigs.base,
   },
   {
-    title: "流向",
-    unit: "°",
-    color: "hsl(220, 90%, 60%)",
-    icon: Compass,
-    key: "currentDirection",
-    statItems: statsItemConfigs.base,
+    title: "浪高",
+    unit: "m",
+    color: "hsl(35.3 91.2% 51.6%)",
+    icon: Waves,
+    key: "waveHeight",
+    statItems: statsItemConfigs.waveHeight,
+  },
+  {
+    title: "浪周期",
+    unit: "s",
+    color: "hsl(262.1 83.3% 57.8%)",
+    icon: Timer,
+    key: "wavePeriod",
+    statItems: statsItemConfigs.wavePeriod,
   },
 ];
 
