@@ -490,32 +490,38 @@ export function ExtremeValueAnalysis({
                   <CardTitle className="text-base">统计参数</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <Table>
-                    <TableBody>
-                      <TableRow>
-                        <TableCell className="font-medium">样本量</TableCell>
-                        <TableCell>{pearsonParams?.n || "-"}</TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell className="font-medium">均值</TableCell>
-                        <TableCell>
-                          {pearsonParams?.mean.toFixed(2) || "-"} {unit}
-                        </TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell className="font-medium">标准差</TableCell>
-                        <TableCell>
-                          {pearsonParams?.stdDev.toFixed(2) || "-"} {unit}
-                        </TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell className="font-medium">偏态系数</TableCell>
-                        <TableCell>
-                          {pearsonParams?.skewness.toFixed(2) || "-"}
-                        </TableCell>
-                      </TableRow>
-                    </TableBody>
-                  </Table>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <p className="text-xs text-muted-foreground">样本量</p>
+                      <p className="text-2xl font-bold">
+                        {pearsonParams?.n || "-"}
+                      </p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-xs text-muted-foreground">均值</p>
+                      <p className="text-2xl font-bold">
+                        {pearsonParams?.mean.toFixed(2) || "-"}
+                        <span className="text-xs text-muted-foreground ml-1">
+                          {unit}
+                        </span>
+                      </p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-xs text-muted-foreground">标准差</p>
+                      <p className="text-2xl font-bold">
+                        {pearsonParams?.stdDev.toFixed(2) || "-"}
+                        <span className="text-xs text-muted-foreground ml-1">
+                          {unit}
+                        </span>
+                      </p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-xs text-muted-foreground">偏态系数</p>
+                      <p className="text-2xl font-bold">
+                        {pearsonParams?.skewness.toFixed(2) || "-"}
+                      </p>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
 
@@ -524,30 +530,40 @@ export function ExtremeValueAnalysis({
                   <CardTitle className="text-base">重现期分析</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>重现期 (年)</TableHead>
-                        <TableHead>
-                          {title} ({unit})
-                        </TableHead>
-                        {loadCalculation && <TableHead>环境荷载 (N)</TableHead>}
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {returnPeriodValues.map((item) => (
-                        <TableRow key={item.period}>
-                          <TableCell>{item.period}</TableCell>
-                          <TableCell>{item.extremeValue.toFixed(2)}</TableCell>
+                  <div className="space-y-4">
+                    {returnPeriodValues.map((item, index) => (
+                      <div
+                        key={item.period}
+                        className="flex justify-between items-center pb-2 border-b last:border-0"
+                      >
+                        <div className="space-y-1">
+                          <p className="text-sm font-medium">
+                            {item.period} 年
+                          </p>
+                        </div>
+                        <div className="flex gap-4">
+                          <div className="text-right">
+                            <p className="text-xs text-muted-foreground">
+                              {title}
+                            </p>
+                            <p className="text-base font-semibold">
+                              {item.extremeValue.toFixed(2)} {unit}
+                            </p>
+                          </div>
                           {loadCalculation && (
-                            <TableCell>
-                              {item.environmentalLoad?.toFixed(2)}
-                            </TableCell>
+                            <div className="text-right">
+                              <p className="text-xs text-muted-foreground">
+                                环境荷载
+                              </p>
+                              <p className="text-base font-semibold">
+                                {item.environmentalLoad?.toFixed(2)} N
+                              </p>
+                            </div>
                           )}
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </CardContent>
               </Card>
             </div>
