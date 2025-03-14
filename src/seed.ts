@@ -105,7 +105,7 @@ async function fresh() {
   console.log("已将大于 99 的数据更新为null", res.length);
 }
 
-fresh()
+main()
   .catch((e) => {
     console.error(e);
     process.exit(1);
