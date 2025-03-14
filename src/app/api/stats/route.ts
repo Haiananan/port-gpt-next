@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import _ from "lodash";
 
 interface CoastalDataRecord {
   airTemperature: number | null;
@@ -125,6 +126,27 @@ export async function GET(request: Request) {
     const waveHeightSpecialStats = calculateWaveStats(waveHeightData);
     const wavePeriodSpecialStats = calculateWaveStats(wavePeriodData);
 
+    function mockData(num: number, avg: number, variance: number) {
+      const data = [];
+
+      for (let i = 0; i < num; i++) {
+        // 使用 lodash random 生成围绕平均值的随机数
+        const value = _.random(avg - variance, avg + variance, true);
+        data.push(value);
+      }
+
+      return {
+        trend: calculateTrend(data),
+        avg,
+        max: Math.max(...data),
+        min: Math.min(...data),
+      };
+    }
+
+    function randomNumberRange(min: number, max: number) {
+      return Math.random() * (max - min) + min;
+    }
+
     const stats = {
       temperature: calculateStats(
         data.map((d: CoastalDataRecord) => d.airTemperature ?? 0)
@@ -152,16 +174,10 @@ export async function GET(request: Request) {
         t110: wavePeriodSpecialStats.h110,
         t113: wavePeriodSpecialStats.h113,
       },
-      // 添加新字段的统计
-      waterLevel: calculateStats(
-        data.map((d: CoastalDataRecord) => d.waterLevel ?? 0)
-      ),
-      currentSpeed: calculateStats(
-        data.map((d: CoastalDataRecord) => d.currentSpeed ?? 0)
-      ),
-      currentDirection: calculateStats(
-        data.map((d: CoastalDataRecord) => d.currentDirection ?? 0)
-      ),
+      // mock
+      waterLevel: mockData(data.length, randomNumberRange(0, 10), 2),
+      currentSpeed: mockData(data.length, randomNumberRange(0, 10), 2),
+      currentDirection: mockData(data.length, randomNumberRange(0, 360), 2),
     };
 
     return NextResponse.json(stats);

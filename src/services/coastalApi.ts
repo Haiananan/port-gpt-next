@@ -226,3 +226,43 @@ export async function fetchStatsData(
   const data = await response.json();
   return data;
 }
+
+// 获取流速和流向数据
+export async function fetchCurrentData(
+  station: string,
+  startDate: string,
+  endDate: string
+): Promise<CoastalStationData[]> {
+  const params = new URLSearchParams({
+    station,
+    startDate,
+    endDate,
+    fields: "date,currentSpeed,currentDirection",
+  });
+
+  const response = await fetch(`/api/chartData?${params.toString()}`);
+  if (!response.ok) {
+    throw new Error("获取流速流向数据失败");
+  }
+  return response.json();
+}
+
+// 获取水位数据
+export async function fetchWaterLevelData(
+  station: string,
+  startDate: string,
+  endDate: string
+): Promise<CoastalStationData[]> {
+  const params = new URLSearchParams({
+    station,
+    startDate,
+    endDate,
+    fields: "date,waterLevel",
+  });
+
+  const response = await fetch(`/api/chartData?${params.toString()}`);
+  if (!response.ok) {
+    throw new Error("获取水位数据失败");
+  }
+  return response.json();
+}
