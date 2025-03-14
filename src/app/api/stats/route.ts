@@ -18,6 +18,40 @@ function calculateTrend(data: number[]): number {
   return validData[validData.length - 1] - validData[0];
 }
 
+// 计算波高/周期的特殊百分位数据
+function calculateWaveStats(data: number[]) {
+  const validData = data.filter(
+    (val) => val !== null && !isNaN(val) && val > 0
+  );
+  if (validData.length === 0) {
+    return {
+      h13: 0, // H1/3 - 有效波高(最高1/3波浪的平均值)
+      h110: 0, // H1/10 - 最高1/10波浪的平均值
+      h113: 0, // H1/13 - 最高1/13波浪的平均值
+    };
+  }
+
+  // 对有效数据进行降序排序
+  const sortedData = [...validData].sort((a, b) => b - a);
+
+  // 计算不同百分位的数据
+  const h13Count = Math.ceil(sortedData.length / 3);
+  const h110Count = Math.ceil(sortedData.length / 10);
+  const h113Count = Math.ceil(sortedData.length / 13);
+
+  // 提取指定百分位的数据
+  const h13Data = sortedData.slice(0, h13Count);
+  const h110Data = sortedData.slice(0, h110Count);
+  const h113Data = sortedData.slice(0, h113Count);
+
+  // 计算平均值
+  return {
+    h13: h13Data.reduce((sum, val) => sum + val, 0) / h13Data.length,
+    h110: h110Data.reduce((sum, val) => sum + val, 0) / h110Data.length,
+    h113: h113Data.reduce((sum, val) => sum + val, 0) / h113Data.length,
+  };
+}
+
 // 计算统计值
 function calculateStats(data: number[]) {
   const validData = data.filter((val) => val !== null && !isNaN(val));
@@ -73,6 +107,18 @@ export async function GET(request: Request) {
       },
     });
 
+    // 提取波高和周期数据
+    const waveHeightData = data.map(
+      (d: CoastalDataRecord) => d.windWaveHeight ?? 0
+    );
+    const wavePeriodData = data.map(
+      (d: CoastalDataRecord) => d.windWavePeriod ?? 0
+    );
+
+    // 计算波高和周期的特殊统计值
+    const waveHeightSpecialStats = calculateWaveStats(waveHeightData);
+    const wavePeriodSpecialStats = calculateWaveStats(wavePeriodData);
+
     const stats = {
       temperature: calculateStats(
         data.map((d: CoastalDataRecord) => d.airTemperature ?? 0)
@@ -86,12 +132,20 @@ export async function GET(request: Request) {
       windSpeed: calculateStats(
         data.map((d: CoastalDataRecord) => d.windSpeed ?? 0)
       ),
-      waveHeight: calculateStats(
-        data.map((d: CoastalDataRecord) => d.windWaveHeight ?? 0)
-      ),
-      wavePeriod: calculateStats(
-        data.map((d: CoastalDataRecord) => d.windWavePeriod ?? 0)
-      ),
+      waveHeight: {
+        ...calculateStats(waveHeightData),
+        // 添加特殊波高统计
+        h13: waveHeightSpecialStats.h13,
+        h110: waveHeightSpecialStats.h110,
+        h113: waveHeightSpecialStats.h113,
+      },
+      wavePeriod: {
+        ...calculateStats(wavePeriodData),
+        // 添加特殊周期统计
+        t13: wavePeriodSpecialStats.h13,
+        t110: wavePeriodSpecialStats.h110,
+        t113: wavePeriodSpecialStats.h113,
+      },
     };
 
     return NextResponse.json(stats);
