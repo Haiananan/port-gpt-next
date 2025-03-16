@@ -67,7 +67,7 @@ const statsConfig = [
     icon: Thermometer,
     key: "temperature",
     statItems: statsItemConfigs.base,
-    span: 4,
+    span: "col-span-4",
   },
   {
     title: "海温",
@@ -76,7 +76,7 @@ const statsConfig = [
     icon: Droplets,
     key: "seaTemperature",
     statItems: statsItemConfigs.base,
-    span: 4,
+    span: "col-span-4",
   },
 
   {
@@ -86,7 +86,7 @@ const statsConfig = [
     icon: Wind,
     key: "windSpeed",
     statItems: statsItemConfigs.windSpeed,
-    span: 4,
+    span: "col-span-4",
   },
   {
     title: "气压",
@@ -95,7 +95,7 @@ const statsConfig = [
     icon: Gauge,
     key: "pressure",
     statItems: statsItemConfigs.base,
-    span: 4,
+    span: "col-span-4",
   },
   {
     title: "水位",
@@ -104,7 +104,7 @@ const statsConfig = [
     icon: Ruler,
     key: "waterLevel",
     statItems: statsItemConfigs.base,
-    span: 4,
+    span: "col-span-4",
   },
   {
     title: "流速",
@@ -113,7 +113,7 @@ const statsConfig = [
     icon: Navigation2,
     key: "currentSpeed",
     statItems: statsItemConfigs.base,
-    span: 4,
+    span: "col-span-4",
   },
   {
     title: "浪高",
@@ -122,7 +122,7 @@ const statsConfig = [
     icon: Waves,
     key: "waveHeight",
     statItems: statsItemConfigs.waveHeight,
-    span: 6,
+    span: "col-span-6",
   },
   {
     title: "浪周期",
@@ -131,7 +131,7 @@ const statsConfig = [
     icon: Timer,
     key: "wavePeriod",
     statItems: statsItemConfigs.wavePeriod,
-    span: 6,
+    span: "col-span-6",
   },
 ];
 
@@ -190,7 +190,7 @@ export function CoastalStats({
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-12 gap-4 mb-6">
         {statsConfig.map((config) => (
-          <div key={config.key} className={`col-span-${config.span}`}>
+          <div key={config.key} className={config.span}>
             <StatsCard
               title={config.title}
               stats={
