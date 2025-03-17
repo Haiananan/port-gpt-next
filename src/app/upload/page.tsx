@@ -152,6 +152,9 @@ export default function UploadPage() {
     setProgress(0);
 
     try {
+      let allProcessedData: any[] = [];
+
+      // 第一步：读取和处理所有文件
       for (let i = 0; i < selectedFiles.length; i++) {
         const file = selectedFiles[i];
         console.log(
@@ -227,33 +230,55 @@ export default function UploadPage() {
             };
           });
 
-          console.log(`文件 ${file.name} 数据处理完成，开始检查重复`);
-
-          // 检查重复数据
-          const response = await fetch("/api/check-duplicates", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(processedData),
-          });
-
-          const { duplicates } = await response.json();
-          console.log(`文件 ${file.name} 发现 ${duplicates.length} 条重复数据`);
-
-          if (duplicates.length > 0) {
-            setDuplicateData(duplicates);
-            setShowDuplicateDialog(true);
-          } else {
-            await uploadData(processedData);
-          }
+          allProcessedData = [...allProcessedData, ...processedData];
+          setProgress(((i + 1) / selectedFiles.length) * 50); // 前50%进度用于文件处理
         } catch (error) {
           console.error(`处理文件 ${file.name} 时出错:`, error);
           throw error;
         }
-
-        setProgress(((i + 1) / selectedFiles.length) * 100);
       }
+
+      console.log(`所有文件处理完成，共 ${allProcessedData.length} 条数据`);
+
+      // 第二步：检查所有数据的重复情况
+      const response = await fetch("/api/check-duplicates", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(allProcessedData),
+      });
+
+      const { duplicates } = await response.json();
+      console.log(`发现 ${duplicates.length} 条重复数据`);
+
+      if (duplicates.length > 0) {
+        // 找出不重复的数据
+        const nonDuplicates = allProcessedData.filter(
+          (item) =>
+            !duplicates.some(
+              (dup: any) =>
+                dup.station === item.station &&
+                dayjs(dup.date).format("YYYY-MM-DD") ===
+                  dayjs(item.date).format("YYYY-MM-DD")
+            )
+        );
+
+        // 如果有不重复的数据，先上传
+        if (nonDuplicates.length > 0) {
+          console.log(`上传 ${nonDuplicates.length} 条不重复数据`);
+          await uploadData(nonDuplicates);
+        }
+
+        // 对重复数据进行确认
+        setDuplicateData(duplicates);
+        setShowDuplicateDialog(true);
+      } else {
+        // 没有重复数据，直接上传
+        await uploadData(allProcessedData);
+      }
+
+      setProgress(100);
     } catch (error) {
       console.error("上传过程出错:", error);
       toast.error("上传失败", {
@@ -410,7 +435,7 @@ export default function UploadPage() {
                 <li>字段名必须与下面列出的完全匹配（区分大小写）</li>
                 <li>日期格式：YYYY-MM-DD 或 YYYY/MM/DD</li>
                 <li>数值字段支持小数点</li>
-                <li>缺失值可以留空或填写数字9</li>
+                <li>缺失值可以留空</li>
               </ul>
             </div>
 
@@ -492,7 +517,7 @@ export default function UploadPage() {
                 <li>如果上传重复数据，系统会提示是否覆盖</li>
                 <li>建议每个文件数据量不超过1000条</li>
                 <li>上传前请仔细检查数据格式是否正确</li>
-                <li>数值类型字段如果无观测数据，可以留空或填写数字9</li>
+                <li>数值类型字段如果无观测数据，可以留空</li>
               </ul>
             </div>
           </div>
