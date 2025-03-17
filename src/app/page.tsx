@@ -94,8 +94,7 @@ export default function DataQueryComponent() {
 
   return (
     <main className="min-h-screen">
-      <ScrollToTop />
-      <Header />
+
       <div className="container mx-auto p-4 space-y-6">
         <CoastalQueryForm
           station={station}

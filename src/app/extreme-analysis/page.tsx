@@ -2,13 +2,13 @@
 
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
 import { Skeleton } from "@/components/ui/skeleton";
 import { fetchMockExtremeValues } from "@/services/coastalApi";
 import { ExtremeValueAnalysis } from "@/components/ExtremeValueAnalysis";
-import { Header } from "@/components/ui/header";
+
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Waves, Wind, Thermometer, Gauge } from "lucide-react";
 
@@ -100,7 +100,6 @@ export default function MockExtremeAnalysisPage() {
 
   return (
     <main className="min-h-screen bg-background">
-      <Header />
       <div className="container mx-auto p-4 space-y-6">
         <h1 className="text-3xl font-bold">极值分析模拟</h1>
         <p className="text-muted-foreground">

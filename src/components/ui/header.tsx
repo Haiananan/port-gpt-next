@@ -11,7 +11,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ChevronDown, Home, LineChart } from "lucide-react";
+import { ChevronDown, Home, LineChart, Upload } from "lucide-react";
 
 const navItems = [
   {
@@ -25,6 +25,12 @@ const navItems = [
     label: "极值分析",
     icon: LineChart,
     description: "进行极值分布拟合分析",
+  },
+  {
+    href: "/upload",
+    label: "数据导入",
+    icon: Upload,
+    description: "导入海洋站观测数据",
   },
 ];
 
