@@ -73,7 +73,6 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "@types/xlsx": "^0.0.36",
     "prisma": "^6.4.1",
     "tailwindcss": "^4",
     "tsx": "^4.19.3",
