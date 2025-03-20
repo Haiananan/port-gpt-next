@@ -126,7 +126,7 @@ export default function MockExtremeAnalysisPage() {
               <h3 className="font-medium">分析类型</h3>
               <div className="flex mt-2">
                 <Button
-                  variant={analysisType === "max" ? "default" : "outline"}
+                  variant={analysisType === "max" ? "default" : "outline"}  
                   size="sm"
                   onClick={() => setAnalysisType("max")}
                   className="rounded-r-none"
