@@ -102,25 +102,32 @@ export default function SalinityMap() {
             data: {
               type: "FeatureCollection",
               features: [
-                // 在站点之间插值生成更多数据点以实现平滑过渡
+                // 为每个站点生成扩散点
                 ...points.flatMap((point) => {
                   const features = [];
-                  // 以站点为中心，生成一些随机点
-                  for (let i = 0; i < 15; i++) {
-                    const offset = (Math.random() - 0.5) * 0.5; // ±0.25度范围内
-                    features.push({
-                      type: "Feature",
-                      properties: {
-                        salinity: point.salinity - Math.abs(offset) * 2, // 距离站点越远，盐度越低
-                      },
-                      geometry: {
-                        type: "Point",
-                        coordinates: [
-                          point.longitude + offset,
-                          point.latitude + (Math.random() - 0.5) * 0.5,
-                        ],
-                      },
-                    });
+                  // 生成同心圆状的扩散点
+                  for (let radius = 0; radius <= 0.5; radius += 0.1) {  // 0.5度范围
+                    for (let angle = 0; angle < 360; angle += 30) {  // 每30度一个点
+                      const radian = (angle * Math.PI) / 180;
+                      const x = point.longitude + radius * Math.cos(radian);
+                      const y = point.latitude + radius * Math.sin(radian);
+                      
+                      // 根据距离计算盐度衰减
+                      const distance = Math.sqrt(radius * radius);
+                      const salinityCurve = Math.exp(-distance * 2); // 指数衰减
+                      const salinityDiff = point.salinity - 28; // 与基准盐度的差值
+                      
+                      features.push({
+                        type: "Feature",
+                        properties: {
+                          salinity: 28 + salinityDiff * salinityCurve,
+                        },
+                        geometry: {
+                          type: "Point",
+                          coordinates: [x, y],
+                        },
+                      });
+                    }
                   }
                   return features;
                 }),
@@ -133,56 +140,47 @@ export default function SalinityMap() {
             type: "heatmap",
             source: "salinity-heatmap",
             paint: {
-              // 热力图权重
+              // 热力图权重 - 使用更平滑的权重曲线
               "heatmap-weight": [
                 "interpolate",
                 ["linear"],
                 ["get", "salinity"],
-                28,
-                0,
-                32,
-                1,
+                28, 0,
+                29, 0.3,
+                30, 0.5,
+                31, 0.8,
+                32, 1
               ],
-              // 热力图强度
+              // 热力图强度 - 减小以使颜色更柔和
               "heatmap-intensity": [
                 "interpolate",
                 ["linear"],
                 ["zoom"],
-                5,
-                0.5,
-                8,
-                1,
+                5, 0.4,
+                8, 0.8
               ],
-              // 热力图颜色渐变
+              // 热力图颜色渐变 - 使用更适合盐度的配色
               "heatmap-color": [
                 "interpolate",
                 ["linear"],
                 ["heatmap-density"],
-                0,
-                "rgba(33,102,172,0)",
-                0.2,
-                "rgba(103,169,207,0.4)",
-                0.4,
-                "rgba(209,229,240,0.6)",
-                0.6,
-                "rgba(253,219,199,0.7)",
-                0.8,
-                "rgba(239,138,98,0.8)",
-                1,
-                "rgba(178,24,43,0.9)",
+                0, "rgba(65,182,196,0)",
+                0.2, "rgba(127,205,187,0.4)",
+                0.4, "rgba(199,233,180,0.6)",
+                0.6, "rgba(237,248,177,0.7)",
+                0.8, "rgba(255,255,204,0.8)",
+                1, "rgba(255,237,160,0.9)"
               ],
-              // 热力图半径
+              // 热力图半径 - 增加以获得更平滑的过渡
               "heatmap-radius": [
                 "interpolate",
                 ["linear"],
                 ["zoom"],
-                5,
-                30,
-                8,
-                50,
+                5, 40,
+                8, 60
               ],
-              // 热力图不透明度
-              "heatmap-opacity": 0.7,
+              // 热力图不透明度 - 略微降低以便看清底图
+              "heatmap-opacity": 0.6
             },
           });
 
