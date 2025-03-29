@@ -27,20 +27,11 @@ export default function SalinityAnalysis() {
         </TabsList>
 
         <TabsContent value="map">
-          <Card>
-            <CardContent className="pt-6">
-            
-              <SalinityMap />
-            </CardContent>
-          </Card>
+          <SalinityMap />
         </TabsContent>
 
         <TabsContent value="trend">
-          <Card>
-            <CardContent className="pt-6">
-              <TrendAnalysis />
-            </CardContent>
-          </Card>
+          <TrendAnalysis />
         </TabsContent>
       </Tabs>
     </div>
