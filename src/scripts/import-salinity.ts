@@ -7,10 +7,10 @@ import colors from "ansi-colors";
 const prisma = new PrismaClient();
 
 const STATION_NAMES: { [key: string]: string } = {
-  "001": "Shidao",
-  "002": "Xiaomaidao",
-  "003": "Lianyungang",
-  "004": "Yinshuichuan",
+  "0001": "Shidao",
+  "0002": "Xiaomaidao",
+  "0003": "Lianyungang",
+  "0004": "Yinshuichuan",
 };
 
 interface HeaderRecord {
@@ -32,8 +32,10 @@ interface DataRecord {
 }
 
 function parseHeaderRecord(line: string): HeaderRecord {
+  const stationCode = line.substring(3, 7).trim();
+
   return {
-    stationCode: line.substring(3, 7).trim(),
+    stationCode,
     latitude:
       parseFloat(line.substring(23, 25)) +
       parseFloat(line.substring(25, 27)) / 60 +
@@ -103,7 +105,6 @@ async function importFile(filePath: string, progress?: ImportProgress) {
   const startTime = Date.now();
   let processedCount = 0;
 
-  // 创建进度条
   const progressBar = new cliProgress.SingleBar({
     format: `${colors.cyan(
       "{bar}"
@@ -112,17 +113,9 @@ async function importFile(filePath: string, progress?: ImportProgress) {
     barIncompleteChar: "\u2591",
   });
 
-  // 如果有进度记录，跳过已处理的记录
-  const startIndex = progress?.lastProcessedDate
-    ? records.findIndex((r) => {
-        const date = new Date(header.year, header.month - 1, r.day);
-        return date > progress.lastProcessedDate!;
-      })
-    : 0;
+  progressBar.start(records.length, 0);
 
-  progressBar.start(records.length - startIndex, 0);
-
-  for (let i = startIndex; i < records.length; i++) {
+  for (let i = 0; i < records.length; i++) {
     const record = records[i];
     const recordDate = new Date(header.year, header.month - 1, record.day);
 
@@ -139,6 +132,11 @@ async function importFile(filePath: string, progress?: ImportProgress) {
           temp14: record.temp14,
           temp20: record.temp20,
           salinity: record.salinity,
+          latitude: header.latitude,
+          longitude: header.longitude,
+          tempAccuracy: header.tempAccuracy,
+          salinityAccuracy: header.salinityAccuracy,
+          stationName: STATION_NAMES[header.stationCode] || "Unknown",
         },
         create: {
           stationCode: header.stationCode,
@@ -160,28 +158,12 @@ async function importFile(filePath: string, progress?: ImportProgress) {
       const speed = Math.round(processedCount / elapsedTime);
 
       progressBar.update(processedCount, { speed });
-
-      // 每 10 条记录保存一次进度
-      if (processedCount % 10 === 0) {
-        saveProgress({
-          file: path.basename(filePath),
-          processedRecords: i + 1,
-          totalRecords: records.length,
-          lastProcessedDate: recordDate,
-        });
-      }
     } catch (error) {
       console.error(`\nError importing record for date ${record.day}:`, error);
     }
   }
 
   progressBar.stop();
-
-  // 清除进度文件
-  const progressFile = path.join(process.cwd(), ".import-progress.json");
-  if (fs.existsSync(progressFile)) {
-    fs.unlinkSync(progressFile);
-  }
 }
 
 async function importAllFiles() {
