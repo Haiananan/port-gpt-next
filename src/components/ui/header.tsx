@@ -33,6 +33,12 @@ const navItems = [
     description: "进行极值分布拟合分析",
   },
   {
+    href: "/salinity",
+    label: "盐度分析",
+    icon: LineChart,
+    description: "查看盐度变化趋势",
+  },
+  {
     href: "/upload",
     label: "数据导入",
     icon: Upload,
