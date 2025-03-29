@@ -47,13 +47,13 @@ export default function SalinityMap() {
             },
           ],
         },
-        center: [119.5, 38.5],
-        zoom: 7,
+        center: [120.5, 35.5],
+        zoom: 6,
         minZoom: 5,
         maxZoom: 12,
         maxBounds: [
-          [115, 32],
-          [127, 41],
+          [117, 30],
+          [124, 41],
         ],
       });
 
