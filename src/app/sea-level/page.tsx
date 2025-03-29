@@ -2,6 +2,7 @@
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
+import { Waves, TrendingUp, BarChart3, Target } from "lucide-react";
 import TrendChart from "./components/TrendChart";
 import RegionalComparison from "./components/RegionalComparison";
 import YearlyHighlights from "./components/YearlyHighlights";
@@ -13,16 +14,52 @@ import {
   getInterannualChanges,
 } from "./utils/dataProcessor";
 
+const STAT_CARDS = [
+  {
+    id: "latest",
+    title: "最新海平面",
+    icon: Waves,
+    color: "#3b82f6",
+    getValue: (data: any) => data.annualData[0].annual.meanLevel,
+    unit: "毫米",
+    description: "较常年平均水平的偏差",
+  },
+  {
+    id: "change",
+    title: "年际变化",
+    icon: TrendingUp,
+    color: "#10b981",
+    getValue: (_: any, change: number) => Math.abs(change),
+    unit: "毫米",
+    getDescription: (change: number) => `较上年${change > 0 ? "上升" : "下降"}`,
+  },
+  {
+    id: "rate",
+    title: "上升速率",
+    icon: BarChart3,
+    color: "#f59e0b",
+    getValue: (data: any) => data.longTermTrends.periods[0].riseRate,
+    unit: "毫米/年",
+    description: "长期平均上升速率",
+  },
+  {
+    id: "prediction",
+    title: "30年预测",
+    icon: Target,
+    color: "#ef4444",
+    getValue: (data: any) => data.predictions.riseRange.max,
+    unit: "毫米",
+    getDescription: (_: any, __: any, data: any) =>
+      `预测上限 (${data.predictions.period}年)`,
+  },
+];
+
 export default function SeaLevelAnalysis() {
   const latestData = getLatestDataset();
   const annualData = getAnnualMeanLevels();
   const interannualChanges = getInterannualChanges();
-
-  // 计算年际变化趋势
   const recentChange =
     interannualChanges[interannualChanges.length - 1]?.change || 0;
-  const changeDirection = recentChange > 0 ? "上升" : "下降";
-  const changeAbs = Math.abs(recentChange).toFixed(1);
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -38,65 +75,48 @@ export default function SeaLevelAnalysis() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
-        <Card>
-          <CardContent className="p-6">
-            <h3 className="text-lg font-semibold mb-2">最新海平面</h3>
-            <div className="text-3xl font-bold text-primary">
-              {latestData.annualData[0].annual.meanLevel}
-              <span className="text-base font-normal text-muted-foreground ml-1">
-                毫米
-              </span>
-            </div>
-            <p className="text-sm text-muted-foreground mt-2">
-              较常年平均水平的偏差
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <h3 className="text-lg font-semibold mb-2">年际变化</h3>
-            <div className="text-3xl font-bold text-primary">
-              {changeAbs}
-              <span className="text-base font-normal text-muted-foreground ml-1">
-                毫米
-              </span>
-            </div>
-            <p className="text-sm text-muted-foreground mt-2">
-              较上年{changeDirection}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <h3 className="text-lg font-semibold mb-2">上升速率</h3>
-            <div className="text-3xl font-bold text-primary">
-              {latestData.longTermTrends.periods[0].riseRate}
-              <span className="text-base font-normal text-muted-foreground ml-1">
-                毫米/年
-              </span>
-            </div>
-            <p className="text-sm text-muted-foreground mt-2">
-              长期平均上升速率
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <h3 className="text-lg font-semibold mb-2">30年预测</h3>
-            <div className="text-3xl font-bold text-primary">
-              {latestData.predictions.riseRange.max}
-              <span className="text-base font-normal text-muted-foreground ml-1">
-                毫米
-              </span>
-            </div>
-            <p className="text-sm text-muted-foreground mt-2">
-              预测上限 ({latestData.predictions.period}年)
-            </p>
-          </CardContent>
-        </Card>
+        {STAT_CARDS.map((card) => (
+          <Card key={card.id} className="overflow-hidden">
+            <CardContent className="p-0">
+              <div
+                className="p-4 border-b"
+                style={{
+                  backgroundColor: `${card.color}08`,
+                  borderColor: `${card.color}20`,
+                }}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-lg font-semibold flex items-center gap-2">
+                    <card.icon
+                      size={24}
+                      style={{ color: card.color }}
+                      strokeWidth={1.5}
+                    />
+                    <span>{card.title}</span>
+                  </h3>
+                </div>
+                <div className="flex items-baseline gap-1">
+                  <span
+                    className="text-3xl font-bold"
+                    style={{ color: card.color }}
+                  >
+                    {card.getValue(latestData, recentChange).toFixed(1)}
+                  </span>
+                  <span className="text-base text-muted-foreground">
+                    {card.unit}
+                  </span>
+                </div>
+              </div>
+              <div className="px-4 py-3">
+                <p className="text-sm text-muted-foreground">
+                  {card.getDescription
+                    ? card.getDescription(recentChange, null, latestData)
+                    : card.description}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       <Tabs defaultValue="map" className="space-y-4">
