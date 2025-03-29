@@ -1,28 +1,33 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+
 
 export async function GET() {
-  try {
-    // 获取所有唯一的站点信息
-    const stations = await prisma.$queryRaw<
-      Array<{
-        stationCode: string;
-        stationName: string;
-        latitude: number;
-        longitude: number;
-      }>
-    >`
-      SELECT DISTINCT stationCode, stationName, latitude, longitude
-      FROM SalinityData
-      ORDER BY stationCode
-    `;
+  const data = [
+    {
+      stationCode: "0001",
+      stationName: "Shidao",
+      latitude: 36.865,
+      longitude: 122.42,
+    },
+    {
+      stationCode: "0002",
+      stationName: "Xiaomaidao",
+      latitude: 36.05,
+      longitude: 120.4166666666667,
+    },
+    {
+      stationCode: "0003",
+      stationName: "Lianyungang",
+      latitude: 34.78333333333333,
+      longitude: 119.4333333333333,
+    },
+    {
+      stationCode: "0004",
+      stationName: "Yinshuichuan",
+      latitude: 31.1,
+      longitude: 122.1333333333333,
+    },
+  ];
 
-    return NextResponse.json(stations);
-  } catch (error) {
-    console.error("Error fetching stations:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch stations" },
-      { status: 500 }
-    );
-  }
+  return NextResponse.json(data);
 }
