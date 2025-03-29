@@ -6,7 +6,6 @@ import { Map, TrendingUp, Table2 } from "lucide-react";
 import SalinityMap from "./components/SalinityMap";
 import TrendAnalysis from "./components/TrendAnalysis";
 import StationCard from "./components/StationCard";
-// import DataTable from "./components/DataTable";
 
 export default function SalinityAnalysis() {
   return (
@@ -25,21 +24,12 @@ export default function SalinityAnalysis() {
             <TrendingUp className="w-4 h-4 mr-2" />
             趋势分析
           </TabsTrigger>
-          <TabsTrigger value="data">
-            <Table2 className="w-4 h-4 mr-2" />
-            数据查看
-          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="map">
           <Card>
             <CardContent className="pt-6">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-                <StationCard />
-                <StationCard />
-                <StationCard />
-                <StationCard />
-              </div>
+            
               <SalinityMap />
             </CardContent>
           </Card>
@@ -50,12 +40,6 @@ export default function SalinityAnalysis() {
             <CardContent className="pt-6">
               <TrendAnalysis />
             </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="data">
-          <Card>
-            <CardContent className="pt-6">{/* <DataTable /> */}</CardContent>
           </Card>
         </TabsContent>
       </Tabs>

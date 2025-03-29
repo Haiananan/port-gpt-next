@@ -1,37 +1,29 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 
 export async function GET() {
-  try {
-    // 获取每个站点的最新统计数据
-    const stats = await prisma.$queryRaw`
-      WITH LatestData AS (
-        SELECT 
-          stationCode,
-          MAX(date) as latest_date
-        FROM SalinityData
-        GROUP BY stationCode
-      )
-      SELECT 
-        s.stationCode,
-        s.stationName,
-        s.latitude,
-        s.longitude,
-        s.salinity,
-        (s.temp08 + s.temp14 + s.temp20) / 3 as avgTemp
-      FROM SalinityData s
-      INNER JOIN LatestData l 
-        ON s.stationCode = l.stationCode 
-        AND s.date = l.latest_date
-      ORDER BY s.stationCode
-    `;
+  // 模拟统计数据
+  const mockStats = [
+    {
+      stationCode: "0001",
+      salinity: 31.2,
+      avgTemp: 18.5,
+    },
+    {
+      stationCode: "0002",
+      salinity: 30.8,
+      avgTemp: 19.2,
+    },
+    {
+      stationCode: "0003",
+      salinity: 29.5,
+      avgTemp: 20.1,
+    },
+    {
+      stationCode: "0004",
+      salinity: 28.7,
+      avgTemp: 21.3,
+    },
+  ];
 
-    return NextResponse.json(stats);
-  } catch (error) {
-    console.error("Error fetching stats:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch stats" },
-      { status: 500 }
-    );
-  }
+  return NextResponse.json(mockStats);
 }
