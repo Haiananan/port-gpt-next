@@ -2,11 +2,11 @@
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
-import { Map, TrendingUp, Table2, BarChart3 } from "lucide-react";
+import { Map, TrendingUp, Table2 } from "lucide-react";
 import SalinityMap from "./components/SalinityMap";
 import TrendAnalysis from "./components/TrendAnalysis";
-import DataTable from "./components/DataTable";
 import StationCard from "./components/StationCard";
+// import DataTable from "./components/DataTable";
 
 export default function SalinityAnalysis() {
   return (
@@ -55,9 +55,7 @@ export default function SalinityAnalysis() {
 
         <TabsContent value="data">
           <Card>
-            <CardContent className="pt-6">
-              <DataTable />
-            </CardContent>
+            <CardContent className="pt-6">{/* <DataTable /> */}</CardContent>
           </Card>
         </TabsContent>
       </Tabs>

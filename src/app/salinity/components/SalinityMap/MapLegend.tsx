@@ -1,7 +1,5 @@
 "use client";
 
-import React from "react";
-
 export default function MapLegend() {
   return (
     <div className="absolute bottom-4 right-4 bg-white/90 p-4 rounded-lg shadow-lg backdrop-blur-sm">
