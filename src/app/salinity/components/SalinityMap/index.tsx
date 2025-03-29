@@ -96,6 +96,96 @@ export default function SalinityMap() {
             };
           });
 
+          // 在添加标记点之前，先添加热力图层
+          map.current.addSource("salinity-heatmap", {
+            type: "geojson",
+            data: {
+              type: "FeatureCollection",
+              features: [
+                // 在站点之间插值生成更多数据点以实现平滑过渡
+                ...points.flatMap((point) => {
+                  const features = [];
+                  // 以站点为中心，生成一些随机点
+                  for (let i = 0; i < 15; i++) {
+                    const offset = (Math.random() - 0.5) * 0.5; // ±0.25度范围内
+                    features.push({
+                      type: "Feature",
+                      properties: {
+                        salinity: point.salinity - Math.abs(offset) * 2, // 距离站点越远，盐度越低
+                      },
+                      geometry: {
+                        type: "Point",
+                        coordinates: [
+                          point.longitude + offset,
+                          point.latitude + (Math.random() - 0.5) * 0.5,
+                        ],
+                      },
+                    });
+                  }
+                  return features;
+                }),
+              ],
+            },
+          });
+
+          map.current.addLayer({
+            id: "salinity-heat",
+            type: "heatmap",
+            source: "salinity-heatmap",
+            paint: {
+              // 热力图权重
+              "heatmap-weight": [
+                "interpolate",
+                ["linear"],
+                ["get", "salinity"],
+                28,
+                0,
+                32,
+                1,
+              ],
+              // 热力图强度
+              "heatmap-intensity": [
+                "interpolate",
+                ["linear"],
+                ["zoom"],
+                5,
+                0.5,
+                8,
+                1,
+              ],
+              // 热力图颜色渐变
+              "heatmap-color": [
+                "interpolate",
+                ["linear"],
+                ["heatmap-density"],
+                0,
+                "rgba(33,102,172,0)",
+                0.2,
+                "rgba(103,169,207,0.4)",
+                0.4,
+                "rgba(209,229,240,0.6)",
+                0.6,
+                "rgba(253,219,199,0.7)",
+                0.8,
+                "rgba(239,138,98,0.8)",
+                1,
+                "rgba(178,24,43,0.9)",
+              ],
+              // 热力图半径
+              "heatmap-radius": [
+                "interpolate",
+                ["linear"],
+                ["zoom"],
+                5,
+                30,
+                8,
+                50,
+              ],
+              // 热力图不透明度
+              "heatmap-opacity": 0.7,
+            },
+          });
+
           // 添加标记点
           points.forEach((point) => {
             // 创建标记元素
