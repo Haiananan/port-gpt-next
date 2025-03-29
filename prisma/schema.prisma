@@ -36,3 +36,23 @@ model CoastalStationData {
     @@unique([station, date]) // 为站点、日期和时间创建唯一约束
     @@index([station, date]) // 为站点、日期和时间创建索引
 }
+
+model SalinityData {
+    id               Int      @id @default(autoincrement())
+    stationCode      String // 站点代码 (001-004)
+    stationName      String // 站点名称
+    date             DateTime // 观测日期
+    latitude         Float // 纬度
+    longitude        Float // 经度
+    temp08           Float? // 8点温度
+    temp14           Float? // 14点温度
+    temp20           Float? // 20点温度
+    salinity         Float? // 盐度
+    tempAccuracy     Int? // 温度精度代码
+    salinityAccuracy Int? // 盐度精度代码
+    createdAt        DateTime @default(now())
+    updatedAt        DateTime @updatedAt
+
+    @@unique([stationCode, date])
+    @@index([stationCode, date])
+}
