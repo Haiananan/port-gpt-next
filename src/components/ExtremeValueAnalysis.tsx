@@ -112,24 +112,140 @@ const calculatePearsonTypeIIIValue = (
   return mean + K * stdDev;
 };
 
-// 计算环境荷载 (简化公式)
+// 修改波浪荷载计算函数
+const calculateWaveLoad = (H: number) => {
+  // 基本参数
+  const rho = 1025; // 海水密度 kg/m³
+  const g = 9.81; // 重力加速度 m/s²
+  const D = 3; // 圆柱体直径 m
+  const d = 30; // 水深 m
+  const l = 90; // 圆柱体海平面上高度 m
+  const T = 7.94; // 波浪周期 s
+  const Cd = 1.2; // 拖曳系数
+  const Cm = 2; // 惯性系数
+  const omega = (2 * Math.PI) / T; // 波浪频率 rad/s
+
+  // 计算波数 k (使用简化的深水波近似)
+  const k = omega ** 2 / g;
+
+  // 计算波长和波速
+  const waveLength = (2 * Math.PI) / k;
+  const waveSpeed = waveLength / T;
+
+  // 计算最大波浪爬升高度
+  const H_d = H / d; // H/d 比
+  const intercept = 0.49758;
+  const B1 = 0.63675;
+  const B2 = -0.33942;
+  const eta_max_H = intercept + B1 * H_d + B2 * H_d ** 2;
+  const eta_max = eta_max_H * H;
+
+  // 计算作用范围
+  const z1 = 0;
+  const z2_PD_max = d + eta_max;
+  const z2_PI_max = d + eta_max - H / 2;
+
+  // 计算系数 K1, K2
+  const K1 =
+    ((4 * Math.PI * z2_PD_max) / waveLength -
+      (4 * Math.PI * z1) / waveLength +
+      Math.sinh((4 * Math.PI * z2_PD_max) / waveLength) -
+      Math.sinh((4 * Math.PI * z1) / waveLength)) /
+    (8 * Math.sinh((4 * Math.PI * d) / waveLength));
+
+  const K2 =
+    (Math.sinh((2 * Math.PI * z2_PI_max) / waveLength) -
+      Math.sinh((2 * Math.PI * z1) / waveLength)) /
+    Math.cosh((2 * Math.PI * d) / waveLength);
+
+  // 计算最大拖曳力和惯性力
+  const P_D_max = 0.5 * Cd * rho * g * D * H ** 2 * K1;
+  const P_I_max = 0.125 * Cm * rho * g * Math.PI * D ** 2 * H * K2;
+
+  // 计算最大总波浪力
+  let P_m;
+  if (P_D_max <= 0.5 * P_I_max) {
+    P_m = P_I_max; // 取最大惯性力
+  } else {
+    P_m = P_D_max * (1 + 0.25 * (P_I_max / P_D_max) ** 2);
+  }
+
+  return P_m; // 返回最大总波浪力（单位：N）
+};
+
+// 添加风力荷载计算函数
+const calculateWindLoad = (V_ref: number) => {
+  // 基本参数
+  const rho_air = 1.225; // 空气密度，kg/m³
+  const Cd = 0.5; // 阻力系数
+  const D = 3; // 塔筒直径，m
+  const H_total = 120; // 塔筒总高度，m
+  const H_water = 30; // 水深，m
+  const H = H_total - H_water; // 轮毂高度，m
+  const z_ref = 10; // 参考高度，m
+  const alpha = 0.12; // 风速剖面指数
+  const R = 60; // 转子半径，m
+  const L_blade = 62.9; // 叶片长度，m
+  const W_blade = 5; // 最大弦长，m
+  const num_blades = 3; // 叶片数量
+
+  // 风机运行参数
+  const v_cut_in = 3; // 切入风速，m/s
+  const v_rated = 11.4; // 额定风速，m/s
+  const v_cut_out = 25; // 切出风速，m/s
+
+  // 计算轮毂高度处的风速
+  const V_hub = V_ref * Math.pow(H / z_ref, alpha);
+
+  // 计算叶片扫掠面积
+  const A_R = Math.PI * R ** 2;
+
+  // 计算风机推力
+  let F_wind_rotor = 0;
+  if (V_hub >= v_cut_in && V_hub <= v_cut_out) {
+    // 计算推力系数
+    let C_T;
+    if (V_hub <= v_rated) {
+      C_T = (3.5 * (2 * v_rated - 3.5)) / v_rated ** 2;
+    } else {
+      C_T = (3.5 * v_rated * (2 * v_rated + 3.5)) / V_hub ** 3;
+    }
+    F_wind_rotor = 0.5 * rho_air * C_T * A_R * V_hub ** 2;
+  } else {
+    // 停机状态下的风荷载
+    const A_B = 0.5 * L_blade * W_blade * num_blades;
+    const C_T = V_hub < v_cut_in ? 1.0 : 1.5;
+    F_wind_rotor = 0.5 * rho_air * A_B * C_T * V_hub ** 2;
+  }
+
+  // 计算塔架风荷载
+  const n = 100; // 分段数
+  const dz = H / n;
+  let F_w_segment = 0;
+
+  for (let i = 0; i < n; i++) {
+    const z = (i + 0.5) * dz;
+    const v_z = V_ref * Math.pow(z / z_ref, alpha);
+    F_w_segment += 0.5 * rho_air * Cd * D * dz * v_z ** 2;
+  }
+
+  // 计算总风荷载
+  const F_wind_total = F_wind_rotor + F_w_segment;
+
+  return F_wind_total; // 返回总风荷载（单位：N）
+};
+
+// 修改环境荷载计算函数
 const calculateEnvironmentalLoad = (
   extremeValue: number,
   type: "wave" | "wind" | "current"
 ) => {
-  // 根据不同的环境因素使用不同的计算公式
   switch (type) {
     case "wave":
-      // 波浪荷载 (简化): F = 0.5 * ρ * g * H^2 * D
-      // 其中 ρ 是水密度, g 是重力加速度, H 是波高, D 是结构物直径
-      // 此处假设 ρ=1025 kg/m³, g=9.81 m/s², D=1 m
-      return 0.5 * 1025 * 9.81 * Math.pow(extremeValue, 2) * 1;
+      return calculateWaveLoad(extremeValue);
 
     case "wind":
-      // 风荷载 (简化): F = 0.5 * ρ * Cd * A * V^2
-      // 其中 ρ 是空气密度, Cd 是阻力系数, A 是迎风面积, V 是风速
-      // 此处假设 ρ=1.225 kg/m³, Cd=1.2, A=1 m²
-      return 0.5 * 1.225 * 1.2 * 1 * Math.pow(extremeValue, 2);
+      return calculateWindLoad(extremeValue);
 
     case "current":
       // 流荷载 (简化): F = 0.5 * ρ * Cd * A * V^2
