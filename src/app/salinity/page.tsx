@@ -10,7 +10,7 @@ import StationCard from "./components/StationCard";
 
 export default function SalinityAnalysis() {
   return (
-    <div className="container py-6 space-y-6">
+    <div className="container py-6 space-y-6 mx-auto">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">盐度分析</h1>
       </div>
