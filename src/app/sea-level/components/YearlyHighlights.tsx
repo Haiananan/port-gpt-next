@@ -91,7 +91,7 @@ export default function YearlyHighlights() {
                 </span>
               </p>
               <p className="text-xs text-muted-foreground mt-1">
-                {stats.maxEvent?.date} {stats.maxEvent?.location}
+                {stats.maxEvent?.month}月 {stats.maxEvent?.area}
               </p>
             </div>
           </div>
@@ -109,7 +109,7 @@ export default function YearlyHighlights() {
                 </span>
               </p>
               <p className="text-xs text-muted-foreground mt-1">
-                {stats.minEvent?.date} {stats.minEvent?.location}
+                {stats.minEvent?.month}月 {stats.minEvent?.area}
               </p>
             </div>
           </div>
