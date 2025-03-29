@@ -21,6 +21,12 @@ const navItems = [
     description: "查看数据统计和概览",
   },
   {
+    href: "/sea-level",
+    label: "海平面分析",
+    icon: LineChart,
+    description: "查看海平面变化趋势",
+  },
+  {
     href: "/extreme-analysis",
     label: "极值分析",
     icon: LineChart,
