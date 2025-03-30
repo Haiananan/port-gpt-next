@@ -106,17 +106,19 @@ export default function SalinityMap() {
                 ...points.flatMap((point) => {
                   const features = [];
                   // 生成同心圆状的扩散点
-                  for (let radius = 0; radius <= 0.5; radius += 0.1) {  // 0.5度范围
-                    for (let angle = 0; angle < 360; angle += 30) {  // 每30度一个点
+                  for (let radius = 0; radius <= 0.5; radius += 0.1) {
+                    // 0.5度范围
+                    for (let angle = 0; angle < 360; angle += 30) {
+                      // 每30度一个点
                       const radian = (angle * Math.PI) / 180;
                       const x = point.longitude + radius * Math.cos(radian);
                       const y = point.latitude + radius * Math.sin(radian);
-                      
+
                       // 根据距离计算盐度衰减
                       const distance = Math.sqrt(radius * radius);
                       const salinityCurve = Math.exp(-distance * 2); // 指数衰减
                       const salinityDiff = point.salinity - 28; // 与基准盐度的差值
-                      
+
                       features.push({
                         type: "Feature",
                         properties: {
@@ -145,42 +147,57 @@ export default function SalinityMap() {
                 "interpolate",
                 ["linear"],
                 ["get", "salinity"],
-                28, 0,
-                29, 0.3,
-                30, 0.5,
-                31, 0.8,
-                32, 1
+                28,
+                0,
+                29,
+                0.3,
+                30,
+                0.5,
+                31,
+                0.8,
+                32,
+                1,
               ],
               // 热力图强度 - 减小以使颜色更柔和
               "heatmap-intensity": [
                 "interpolate",
                 ["linear"],
                 ["zoom"],
-                5, 0.4,
-                8, 0.8
+                5,
+                0.4,
+                8,
+                0.8,
               ],
               // 热力图颜色渐变 - 使用更适合盐度的配色
               "heatmap-color": [
                 "interpolate",
                 ["linear"],
                 ["heatmap-density"],
-                0, "rgba(65,182,196,0)",
-                0.2, "rgba(127,205,187,0.4)",
-                0.4, "rgba(199,233,180,0.6)",
-                0.6, "rgba(237,248,177,0.7)",
-                0.8, "rgba(255,255,204,0.8)",
-                1, "rgba(255,237,160,0.9)"
+                0,
+                "rgba(65,182,196,0)",
+                0.2,
+                "rgba(127,205,187,0.4)",
+                0.4,
+                "rgba(199,233,180,0.6)",
+                0.6,
+                "rgba(237,248,177,0.7)",
+                0.8,
+                "rgba(255,255,204,0.8)",
+                1,
+                "rgba(255,237,160,0.9)",
               ],
               // 热力图半径 - 增加以获得更平滑的过渡
               "heatmap-radius": [
                 "interpolate",
                 ["linear"],
                 ["zoom"],
-                5, 40,
-                8, 60
+                5,
+                40,
+                8,
+                60,
               ],
               // 热力图不透明度 - 略微降低以便看清底图
-              "heatmap-opacity": 0.6
+              "heatmap-opacity": 0.6,
             },
           });
 
@@ -265,9 +282,9 @@ export default function SalinityMap() {
     };
   }, []);
 
-//   if (loading) {
-//     return <Skeleton className="h-[600px] w-full rounded-lg" />;
-//   }
+  //   if (loading) {
+  //     return <Skeleton className="h-[600px] w-full rounded-lg" />;
+  //   }
 
   return (
     <Card className="relative">

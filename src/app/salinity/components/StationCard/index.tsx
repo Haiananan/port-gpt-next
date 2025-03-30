@@ -9,7 +9,11 @@ interface StationCardProps {
   temp?: number;
 }
 
-export default function StationCard({ stationName, salinity, temp }: StationCardProps = {}) {
+export default function StationCard({
+  stationName,
+  salinity,
+  temp,
+}: StationCardProps = {}) {
   if (!stationName) {
     return <Skeleton className="h-[120px] w-full" />;
   }
@@ -25,4 +29,4 @@ export default function StationCard({ stationName, salinity, temp }: StationCard
       </CardContent>
     </Card>
   );
-} 
+}

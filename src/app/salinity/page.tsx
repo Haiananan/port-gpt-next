@@ -1,11 +1,9 @@
 "use client";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent } from "@/components/ui/card";
-import { Map, TrendingUp, Table2 } from "lucide-react";
+import { Map, TrendingUp } from "lucide-react";
 import SalinityMap from "./components/SalinityMap";
 import TrendAnalysis from "./components/TrendAnalysis";
-import StationCard from "./components/StationCard";
 
 export default function SalinityAnalysis() {
   return (

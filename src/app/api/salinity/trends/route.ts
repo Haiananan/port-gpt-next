@@ -21,15 +21,16 @@ export async function GET(request: Request) {
         temp20: true,
       },
       orderBy: {
-        date: 'asc',
+        date: "asc",
       },
     });
 
     // 按时间间隔分组并计算平均值
     const groupedData = data.reduce((acc: { [key: string]: any }, curr) => {
-      const period = interval === "month" 
-        ? curr.date.toISOString().slice(0, 7)  // YYYY-MM
-        : curr.date.toISOString().slice(0, 4); // YYYY
+      const period =
+        interval === "month"
+          ? curr.date.toISOString().slice(0, 7) // YYYY-MM
+          : curr.date.toISOString().slice(0, 4); // YYYY
 
       if (!acc[period]) {
         acc[period] = {
@@ -42,7 +43,8 @@ export async function GET(request: Request) {
       }
 
       acc[period].totalSalinity += curr.salinity || 0;
-      acc[period].totalTemp += ((curr.temp08 || 0) + (curr.temp14 || 0) + (curr.temp20 || 0)) / 3;
+      acc[period].totalTemp +=
+        ((curr.temp08 || 0) + (curr.temp14 || 0) + (curr.temp20 || 0)) / 3;
       acc[period].count += 1;
 
       return acc;
@@ -65,4 +67,4 @@ export async function GET(request: Request) {
       { status: 500 }
     );
   }
-} 
+}
