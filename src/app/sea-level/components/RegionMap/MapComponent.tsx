@@ -5,7 +5,7 @@ import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { getRegionalTrends, getLatestDataset } from "../../utils/dataProcessor";
 import { Card } from "@/components/ui/card";
-import { Waves, TrendingUp, ArrowUpRight, ArrowDownRight } from "lucide-react";
+import { Waves, ArrowUpRight, ArrowDownRight } from "lucide-react";
 
 const REGION_METADATA = {
   bohai: {
