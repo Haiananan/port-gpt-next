@@ -11,7 +11,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ChevronDown, Home, LineChart, Upload } from "lucide-react";
+import {
+  ChevronDown,
+  Home,
+  LineChart,
+  Upload,
+  AlertTriangle,
+} from "lucide-react";
 
 const navItems = [
   {
@@ -37,6 +43,12 @@ const navItems = [
     label: "盐度分析",
     icon: LineChart,
     description: "查看盐度变化趋势",
+  },
+  {
+    href: "/analysis",
+    label: "航道分析",
+    icon: AlertTriangle,
+    description: "航道淹没风险分析",
   },
   {
     href: "/upload",
