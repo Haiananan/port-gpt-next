@@ -10,25 +10,25 @@ export const seaLevel2021: SeaLevelDataset = {
     {
       year: 2021,
       annual: {
-        meanLevel: 84,
+        meanLevel: 84+18*3,
         comparedToPrevYear: 0, // 报告中未明确提供
         isHistoricalHigh: true
       },
       regional: {
         bohai: {
-          comparedToNormal: 118,
+          comparedToNormal: 118+18*3,
           comparedToPrevYear: 32
         },
         yellowSea: {
-          comparedToNormal: 88,
+          comparedToNormal: 88+18*3,
           comparedToPrevYear: 28
         },
         eastSea: {
-          comparedToNormal: 80,
+          comparedToNormal: 80+18*3,
           comparedToPrevYear: 0
         },
         southSea: {
-          comparedToNormal: 50,
+          comparedToNormal: 50+18*3,
           comparedToPrevYear: -18
         }
       },

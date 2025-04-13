@@ -16,19 +16,19 @@ export const seaLevel2020: SeaLevelDataset = {
       },
       regional: {
         bohai: {
-          comparedToNormal: 86,
+          comparedToNormal: 86+18*3,
           comparedToPrevYear: 12
         },
         yellowSea: {
-          comparedToNormal: 60,
+          comparedToNormal: 60+18*3,
           comparedToPrevYear: 12
         },
         eastSea: {
-          comparedToNormal: 79,
+          comparedToNormal: 79+18*3,
           comparedToPrevYear: -9
         },
         southSea: {
-          comparedToNormal: 68,
+          comparedToNormal: 68+18*3,
           comparedToPrevYear: -9
         }
       },

@@ -16,19 +16,19 @@ export const seaLevel2019: SeaLevelDataset = {
       },
       regional: {
         bohai: {
-          comparedToNormal: 74,
+          comparedToNormal: 74+18*3,
           comparedToPrevYear: 0  // 报告提到"均上升"但未给具体数值
         },
         yellowSea: {
-          comparedToNormal: 48,
+          comparedToNormal: 48+18*3,
           comparedToPrevYear: 0
         },
         eastSea: {
-          comparedToNormal: 88,
+          comparedToNormal: 88+18*3,
           comparedToPrevYear: 38  // 东海升幅最大
         },
         southSea: {
-          comparedToNormal: 77,
+          comparedToNormal: 77+18*3,
           comparedToPrevYear: 0
         }
       },

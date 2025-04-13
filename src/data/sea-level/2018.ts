@@ -16,19 +16,19 @@ export const seaLevel2018: SeaLevelDataset = {
       },
       regional: {
         bohai: {
-          comparedToNormal: 55,
+          comparedToNormal: 55+18*3,
           comparedToPrevYear: 1, // "略有上升"
         },
         yellowSea: {
-          comparedToNormal: 28,
+          comparedToNormal: 28+18*3,
           comparedToPrevYear: 1, // "略有上升"
         },
         eastSea: {
-          comparedToNormal: 50,
+          comparedToNormal: 50+18*3,
           comparedToPrevYear: -16,
         },
         southSea: {
-          comparedToNormal: 56,
+          comparedToNormal: 56+18*3,
           comparedToPrevYear: -44,
         },
       },
