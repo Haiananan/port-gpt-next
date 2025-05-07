@@ -145,7 +145,7 @@ export function CoastalQueryForm({
                 showMonthDropdown
                 showYearDropdown
                 dropdownMode="select"
-                minDate={new Date(2022, 0, 1)}
+                minDate={new Date(2019, 0, 1)}
                 maxDate={endDate || new Date(2023, 6, 31)}
                 placeholderText="选择开始日期"
                 className={datePickerClassName}
@@ -153,7 +153,7 @@ export function CoastalQueryForm({
               />
             </div>
             <p className="text-xs text-muted-foreground">
-              可选范围：2022年1月1日至
+              可选范围：2019年1月1日至
               {endDate ? endDate.toLocaleDateString("zh-CN") : "2023年7月31日"}
             </p>
           </div>
@@ -182,7 +182,7 @@ export function CoastalQueryForm({
               可选范围：
               {startDate
                 ? startDate.toLocaleDateString("zh-CN")
-                : "2022年1月1日"}
+                : "2019年1月1日"}
               至2023年7月31日
             </p>
           </div>
