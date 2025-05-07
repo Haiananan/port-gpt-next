@@ -2,13 +2,15 @@
   "name": "port-gpt-next",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
     "postinstall": "prisma generate",
-    "clean": "rm -rf .next && rm -rf node_modules"
+    "clean": "rm -rf .next && rm -rf node_modules",
+    "seed": "tsx src/scripts/seed.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^4.1.3",
